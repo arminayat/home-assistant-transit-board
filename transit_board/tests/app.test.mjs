@@ -34,7 +34,10 @@ async function mount(initial = { cards: [] }, url = 'https://example.invalid/api
     }
     if (init?.method === 'PUT') {
       writes.push({ url, init, body: JSON.parse(init.body) });
-      if (put) await put();
+      if (put) {
+        const response = await put();
+        if (response instanceof Response) return response;
+      }
       saved = JSON.parse(init.body);
       revision += 1;
     } else reads.push({ url, init });
@@ -71,6 +74,166 @@ async function selectStation(env) {
   add.click();
   await flush();
 }
+
+test('successful Save closes card settings and restores focus to that card gear', async () => {
+  const env = await mount({ cards: [card('first', 'First'), card('second', 'Second')] });
+  try {
+    gear(env, 'first').click();
+    editTitle(env, 'First revised');
+    assert.equal(get(env, 'settings-panel').hidden, false);
+    get(env, 'save').click();
+    await flush();
+    assert.equal(env.saved().cards[0].title, 'First revised');
+    assert.equal(get(env, 'settings-panel').hidden, true, 'Successful Save should close card settings.');
+    assert.equal(editor(env), null, 'Closing settings must detach the editor and its searches.');
+    assert.equal(env.dom.document.activeElement, gear(env, 'first'));
+    gear(env, 'first').click();
+    assert.equal(title(env).value, 'First revised', 'Reopening must show the saved settings.');
+  } finally { await env.close(); }
+});
+
+test('invalid numeric form values block Save without discarding the visible draft', async () => {
+  for (const value of ['', '0', '21', '1.5']) {
+    const env = await mount({ cards: [card('first', 'First')] });
+    try {
+      gear(env, 'first').click();
+      editTitle(env, 'Draft title');
+      const maximum = editor(env).shadowRoot.querySelector('input[type=number]');
+      maximum.value = value;
+      maximum.dispatchEvent(new env.dom.Event('input', { bubbles: true }));
+      assert.equal(get(env, 'save').disabled, true, `Maximum ${JSON.stringify(value)} must block Save.`);
+      assert.equal(get(env, 'error').hidden, false);
+      assert.match(get(env, 'error').textContent, /correct.*field/i);
+      get(env, 'save').click();
+      get(env, 'save').dispatchEvent(new env.dom.MouseEvent('click'));
+      await flush();
+      assert.equal(env.writes.length, 0, 'Invalid visible input must never save an older valid maximum.');
+      assert.equal(get(env, 'settings-panel').hidden, false);
+      editTitle(env, 'Still my draft');
+      assert.equal(editor(env).shadowRoot.querySelector('input[type=number]'), maximum);
+      assert.equal(maximum.value, value, 'Editing another field must preserve the invalid input.');
+      assert.equal(get(env, 'save').disabled, true);
+      maximum.value = '7';
+      maximum.dispatchEvent(new env.dom.Event('input', { bubbles: true }));
+      assert.equal(get(env, 'save').disabled, false);
+      assert.equal(get(env, 'error').hidden, true);
+      get(env, 'save').click();
+      await flush();
+      assert.equal(env.saved().cards[0].max_departures, 7);
+      assert.equal(env.saved().cards[0].title, 'Still my draft');
+      assert.equal(get(env, 'settings-panel').hidden, true);
+    } finally { await env.close(); }
+  }
+});
+
+test('editor theme survives card changes, setConfig rendering, and reopening without duplicate styles', async () => {
+  const env = await mount({ cards: [card('first', 'First'), card('second', 'Second')] });
+  try {
+    gear(env, 'first').click();
+    const element = editor(env);
+    const root = element.shadowRoot;
+    const sheets = [...root.adoptedStyleSheets];
+    assert.equal(sheets.length, 1);
+    gear(env, 'second').click();
+    assert.equal(editor(env), element);
+    assert.equal(title(env).value, 'Second');
+    assert.deepEqual([...root.adoptedStyleSheets], sheets);
+    get(env, 'cancel').click();
+    gear(env, 'first').click();
+    assert.equal(editor(env), element);
+    assert.equal(title(env).value, 'First');
+    assert.deepEqual([...root.adoptedStyleSheets], sheets);
+  } finally { await env.close(); }
+});
+
+test('form-only invalid edits require discard and clear after Cancel, removal, or reload', async () => {
+  const env = await mount({ cards: [card('first', 'First'), card('second', 'Second')] });
+  try {
+    const invalidate = () => {
+      const field = editor(env).shadowRoot.querySelector('input[type=number]');
+      field.value = '';
+      field.dispatchEvent(new env.dom.Event('input', { bubbles: true }));
+      return field;
+    };
+    gear(env, 'first').click();
+    const maximum = invalidate();
+    let confirmations = 0;
+    env.dom.confirm = () => { confirmations += 1; return false; };
+    gear(env, 'second').click();
+    assert.equal(confirmations, 1);
+    assert.equal(maximum.value, '');
+    assert.equal(title(env).value, 'First');
+    const unload = new env.dom.Event('beforeunload', { cancelable: true });
+    env.dom.dispatchEvent(unload);
+    assert.equal(unload.defaultPrevented, true);
+    const reads = env.reads.length;
+    env.dom.dispatchEvent(new env.dom.Event('focus'));
+    await flush();
+    assert.equal(env.reads.length, reads, 'Refresh must not replace a form-only invalid edit.');
+    get(env, 'cancel').click();
+    gear(env, 'first').click();
+    assert.equal(editor(env).shadowRoot.querySelector('input[type=number]').value, '5');
+    editTitle(env, 'Fresh edit');
+    assert.equal(get(env, 'save').disabled, false, 'Cancel must clear local invalidity.');
+    invalidate();
+    env.dom.confirm = () => true;
+    get(env, 'remove-card').click();
+    assert.equal(get(env, 'save').disabled, false, 'Confirmed removal replaces the invalid form.');
+    get(env, 'cancel').click();
+    gear(env, 'first').click();
+    invalidate();
+    get(env, 'reload').click();
+    await flush();
+    assert.equal(editor(env).shadowRoot.querySelector('input[type=number]').value, '5');
+    assert.equal(get(env, 'error').hidden, true);
+    editTitle(env, 'After reload');
+    assert.equal(get(env, 'save').disabled, false, 'Reload must clear local invalidity.');
+    assert.equal(env.writes.length, 0);
+  } finally { await env.close(); }
+});
+
+test('failed and conflicting saves retain the open editor and unsaved draft', async () => {
+  for (const status of [500, 412]) {
+    const env = await mount({ cards: [card('first', 'First')] });
+    try {
+      gear(env, 'first').click();
+      const input = editTitle(env, 'Keep my draft');
+      env.holdWrites(async () => new Response(JSON.stringify({ error: 'Could not save settings.' }), { status }));
+      get(env, 'save').click();
+      await flush();
+      assert.equal(get(env, 'settings-panel').hidden, false, `HTTP ${status} must not close settings.`);
+      assert.equal(title(env), input, 'Failed Save should retain the same input element.');
+      assert.equal(input.value, 'Keep my draft');
+      assert.equal(env.saved().cards[0].title, 'First');
+      assert.equal(get(env, 'error').hidden, false);
+      assert.equal(get(env, 'save').disabled, false, 'A failed Save remains retryable.');
+      assert.equal(editor(env).inert, false);
+      env.holdWrites(async () => {});
+      get(env, 'save').click();
+      await flush();
+      assert.equal(get(env, 'settings-panel').hidden, true, 'A successful retry should close settings.');
+      assert.equal(env.dom.document.activeElement, gear(env, 'first'));
+    } finally { await env.close(); }
+  }
+});
+
+test('a successful response with remaining unsaved settings leaves the editor open', async () => {
+  const env = await mount({ cards: [card('first', 'First')] });
+  try {
+    gear(env, 'first').click();
+    const input = editTitle(env, 'My draft');
+    env.holdWrites(async () => new Response(JSON.stringify({ cards: [card('first', 'Different saved value')] }), {
+      headers: { ETag: '"2"' },
+    }));
+    get(env, 'save').click();
+    await flush();
+    assert.equal(get(env, 'settings-panel').hidden, false);
+    assert.equal(title(env), input);
+    assert.equal(input.value, 'My draft');
+    assert.equal(get(env, 'save').disabled, false);
+    assert.match(get(env, 'status').textContent, /unsaved changes/);
+  } finally { await env.close(); }
+});
 
 test('empty HTTP installation has accessible Add card, no default card, and Cancel drops a new draft', async () => {
   const env = await mount({ cards: [] }, 'http://example.invalid/api/hassio_ingress/sample/');
@@ -112,6 +275,8 @@ test('two cards can select the same station, save different titles, and edit ind
     get(env, 'save').click();
     await flush();
     const firstId = env.saved().cards[0].id;
+    assert.equal(get(env, 'settings-panel').hidden, true, 'A newly saved card should close its editor.');
+    assert.equal(env.dom.document.activeElement, gear(env, firstId));
     get(env, 'add-card').click();
     editTitle(env, 'Evening');
     await selectStation(env);
@@ -172,6 +337,7 @@ test('dirty switching requires confirmation, invalid drafts block Save, and in-f
     env.holdWrites(() => new Promise((resolve) => { finish = resolve; }));
     get(env, 'save').click();
     await flush();
+    assert.equal(get(env, 'settings-panel').hidden, false, 'A pending Save must keep settings open.');
     for (const control of [get(env, 'add-card'), gear(env, 'first'), gear(env, 'second'), get(env, 'remove-card'), get(env, 'cancel')]) {
       assert.equal(control.disabled, true);
     }
@@ -180,6 +346,8 @@ test('dirty switching requires confirmation, invalid drafts block Save, and in-f
     await flush();
     assert.equal(env.saved().cards[1].title, 'Saved second');
     assert.equal(get(env, 'add-card').disabled, false);
+    assert.equal(get(env, 'settings-panel').hidden, true);
+    assert.equal(env.dom.document.activeElement, gear(env, 'second'));
   } finally { await env.close(); }
 });
 
@@ -208,6 +376,30 @@ test('saved removal confirms, previews a disconnected card, supports Cancel, the
     assert.equal(article(env, 'first'), undefined);
     assert.equal(article(env, 'second'), other);
     assert.equal(get(env, 'settings-panel').hidden, true);
+    assert.equal(env.dom.document.activeElement, get(env, 'add-card'));
+  } finally { await env.close(); }
+});
+
+test('failed removal keeps its confirmation draft until a successful Save focuses Add card', async () => {
+  const env = await mount({ cards: [card('first', 'First')] });
+  try {
+    gear(env, 'first').click();
+    env.dom.confirm = () => true;
+    get(env, 'remove-card').click();
+    env.holdWrites(async () => new Response(JSON.stringify({ error: 'Storage unavailable.' }), { status: 500 }));
+    get(env, 'save').click();
+    await flush();
+    assert.equal(get(env, 'settings-panel').hidden, false);
+    assert.equal(get(env, 'removal-notice').hidden, false);
+    assert.equal(env.saved().cards.length, 1);
+    assert.equal(get(env, 'save').disabled, false);
+    env.holdWrites(async () => {});
+    get(env, 'save').click();
+    await flush();
+    assert.equal(env.saved().cards.length, 0);
+    assert.equal(get(env, 'settings-panel').hidden, true);
+    assert.equal(get(env, 'intro').hidden, false);
+    assert.equal(env.dom.document.activeElement, get(env, 'add-card'));
   } finally { await env.close(); }
 });
 

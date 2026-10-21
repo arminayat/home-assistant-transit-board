@@ -4,6 +4,7 @@ import { BoardSession } from './session.ts';
 import { MAX_CARDS } from './config.ts';
 import type { TransitCardConfig } from './config.ts';
 import { CardView, iconButton, type ConfigElement } from './card-view.ts';
+import { applyEditorTheme } from './editor-theme.ts';
 
 const required = <T extends HTMLElement>(id: string): T => {
   const node = document.getElementById(id);
@@ -16,6 +17,7 @@ add.id = 'add-card';
 required('add-card-host').append(add);
 const addFirst = required<HTMLButtonElement>('add-first-card');
 const editor = document.createElement('transit-board-card-editor') as ConfigElement;
+applyEditorTheme(editor);
 const editorHost = required('editor');
 const save = required<HTMLButtonElement>('save');
 const cancel = required<HTMLButtonElement>('cancel');
@@ -33,6 +35,8 @@ const capacity = required('capacity');
 const views = new Map<string, CardView>();
 let selected: string | undefined;
 let editorConfig: string | undefined;
+let formInvalid = false;
+let editorGeneration = 0;
 let disposed = false;
 const session = new BoardSession(render);
 
@@ -51,15 +55,15 @@ function render(): void {
   capacity.hidden = !full;
   capacity.textContent = `This dashboard can contain up to ${MAX_CARDS} cards.`;
   intro.hidden = !session.saved || displayed.length > 0;
-  save.disabled = session.saving || !session.dirty || Boolean(session.validationError) || Boolean(session.remote);
+  save.disabled = session.saving || !session.dirty || formInvalid || Boolean(session.validationError) || Boolean(session.remote);
   cancel.disabled = remove.disabled = session.saving;
   remove.hidden = removed;
   reload.disabled = session.loading || session.saving;
   retry.hidden = !session.error || session.saving;
   retry.disabled = session.loading;
-  status.textContent = session.saving ? 'Saving…' : session.notice || (session.dirty ? 'Unsaved changes — preview only.' :
+  status.textContent = session.saving ? 'Saving…' : formInvalid ? 'Unsaved changes — preview only.' : session.notice || (session.dirty ? 'Unsaved changes — preview only.' :
     session.loading && !session.saved ? 'Loading your dashboard…' : '');
-  error.textContent = session.validationError || session.error;
+  error.textContent = session.validationError || (formInvalid ? 'Correct the highlighted fields before saving.' : '') || session.error;
   error.hidden = !error.textContent;
   warning.hidden = !session.remote;
   panel.hidden = !selected || !session.saved;
@@ -85,7 +89,7 @@ function render(): void {
   });
   if (selectedDraft && !removed) {
     const signature = JSON.stringify(selectedDraft);
-    if (editorConfig !== signature && !session.validationError) {
+    if (editorConfig !== signature && !session.validationError && !formInvalid) {
       editor.setConfig(selectedDraft);
       editorConfig = signature;
     }
@@ -98,8 +102,9 @@ function render(): void {
 
 function discardBeforeSwitch(): boolean {
   if (!session.saved || session.saving) return false;
-  if (session.dirty && !window.confirm('Discard your unsaved changes before opening another card?')) return false;
+  if ((session.dirty || formInvalid) && !window.confirm('Discard your unsaved changes before opening another card?')) return false;
   selected = undefined;
+  formInvalid = false;
   session.cancel();
   return true;
 }
@@ -124,8 +129,19 @@ function addCard(): void {
 
 add.addEventListener('click', addCard);
 addFirst.addEventListener('click', addCard);
+// Bubble after the upstream field handlers, including invalid edits that emit no config.
+const updateFormValidity = (): void => {
+  editorGeneration += 1;
+  formInvalid = [...editor.shadowRoot!.querySelectorAll<HTMLInputElement | HTMLSelectElement>('input, select')]
+    .some((field) => field.getAttribute('aria-invalid') === 'true' || !field.validity.valid);
+  if (formInvalid) session.invalidateRefresh();
+  render();
+};
+editor.shadowRoot!.addEventListener('input', updateFormValidity);
+editor.shadowRoot!.addEventListener('change', updateFormValidity);
 editor.addEventListener('config-changed', (event) => {
   if (!selected || !session.draft || session.saving) return;
+  editorGeneration += 1;
   const config = (event as CustomEvent<{ config: unknown }>).detail.config;
   const updated = config && typeof config === 'object' && !Array.isArray(config) ? { ...config, id: selected } : config;
   // The upstream editor owns focus/search state. Retain it across ordinary edits.
@@ -134,12 +150,21 @@ editor.addEventListener('config-changed', (event) => {
   editorConfig = card && JSON.stringify(card);
 });
 save.addEventListener('click', () => {
-  const removing = selected && !session.draft?.cards.some((card) => card.id === selected);
-  void session.save().then(() => { if (removing && !session.dirty && !session.error) add.focus(); });
+  if (save.disabled || formInvalid) return;
+  const previous = selected;
+  void session.save().then(() => {
+    if (disposed || session.saving || session.dirty || formInvalid || session.error || session.validationError || session.remote) return;
+    if (selected && selected !== previous) return;
+    selected = undefined;
+    editorConfig = undefined;
+    render();
+    (previous && views.get(previous)?.settings || add).focus();
+  });
 });
 cancel.addEventListener('click', () => {
   const previous = selected;
   selected = undefined;
+  formInvalid = false;
   session.cancel();
   (previous && views.get(previous)?.settings || add).focus();
 });
@@ -147,15 +172,25 @@ remove.addEventListener('click', () => {
   if (!selected || session.saving || !session.draft) return;
   if (!session.saved?.config.cards.some((card) => card.id === selected)) { cancel.click(); return; }
   if (!window.confirm('Remove this card? Choose Save to remove it for everyone, or Cancel to keep it.')) return;
+  formInvalid = false;
   session.edit({ cards: session.draft.cards.filter((card) => card.id !== selected) });
 });
 reload.addEventListener('click', () => {
-  if (!session.dirty || window.confirm('Discard your unsaved changes and load the saved dashboard?')) void session.reload();
+  if (reload.disabled || (session.dirty || formInvalid) && !window.confirm('Discard your unsaved changes and load the saved dashboard?')) return;
+  const generation = editorGeneration;
+  const previous = selected;
+  void session.reload().then(() => {
+    if (session.error || session.validationError || generation !== editorGeneration || selected !== previous) return;
+    formInvalid = false;
+    editor.remove();
+    editorConfig = undefined;
+    render();
+  });
 });
-retry.addEventListener('click', () => { void session.refresh(); });
-const refresh = (): void => { if (!document.hidden && !disposed) void session.refresh(); };
+retry.addEventListener('click', () => { if (!formInvalid) void session.refresh(); });
+const refresh = (): void => { if (!document.hidden && !disposed && !formInvalid) void session.refresh(); };
 const beforeUnload = (event: BeforeUnloadEvent): void => {
-  if (session.dirty || session.saving) { event.preventDefault(); event.returnValue = ''; }
+  if (session.dirty || formInvalid || session.saving) { event.preventDefault(); event.returnValue = ''; }
 };
 window.addEventListener('focus', refresh);
 document.addEventListener('visibilitychange', refresh);

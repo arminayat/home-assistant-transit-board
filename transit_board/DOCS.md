@@ -6,7 +6,7 @@
 2. Choose **Open Web UI**, or enable **Show in sidebar** and open it there.
 3. Choose **+ Add card**, search for a station, select a result and choose **Add stop**.
 4. Optionally set that card's transport modes, lines, direction, title and number of departures.
-5. Choose **Save**.
+5. Choose **Save**. Settings close after a successful save; a failure keeps the editor open with your draft and an error.
 
 The app uses Home Assistant Ingress. It needs no host port, API token, YAML, environment variables or database migration.
 

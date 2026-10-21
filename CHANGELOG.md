@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.0-beta.3
+
+- Close card settings after a successful save and return to the updated departure card.
+- Keep settings open with the draft and error when a save fails or conflicts with another viewer's changes.
+- Refine settings form spacing, controls and interaction feedback.
+- Block saving invalid departure limits and retain those edits until corrected or discarded.
+
+Update the app and reload its Web UI. No new configuration migration or environment variable is required. Browser and live Home Assistant acceptance remain unverified.
+
 ## 0.1.0-beta.2
 
 - Add **+ Add card** and separate departure cards with independent titles, stops, transport modes, lines, directions and departure limits.

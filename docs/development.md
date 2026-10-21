@@ -47,6 +47,8 @@ For an update:
 
 A component refresh does not automatically release this app. Keep the snapshot, provenance, lockfile and container image tied to a reviewable app commit. Keep the app-directory copies of `LICENSE` and `THIRD_PARTY_NOTICES.md` identical to their root originals so the Docker build includes the same notices.
 
+App-specific settings presentation lives in `transit_board/src/editor-theme.ts` and the static App stylesheet. The editor theme adopts a stylesheet into the shared editor's shadow root, preserving its controls and search lifecycle without changing the retained source. Review the theme's selectors when refreshing that snapshot.
+
 ## Documentation images
 
 `docs/images/board.png` and `docs/images/editor.png` show the shared components with sample data, captured outside Home Assistant. Label them accordingly. They demonstrate appearance, rather than app installation, Ingress acceptance or live transit accuracy.
@@ -58,7 +60,7 @@ Use fabricated data and public central station examples when adding fixtures or 
 Prepare a release on `armin/release`, keeping the app manifest, package version and changelogs aligned. Commit the reviewed source and lockfile, run local checks, and push the branch before its version tag. For this beta, from the repository root:
 
 ```sh
-app_version=0.1.0-beta.2
+app_version=0.1.0-beta.3
 git switch armin/release
 git push origin armin/release
 git tag "v$app_version"

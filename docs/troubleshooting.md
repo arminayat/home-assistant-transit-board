@@ -16,6 +16,8 @@ If an update left an old page open, reload it. Confirm the app is started before
 
 ## Settings will not save
 
+Successful saves close settings and show the updated card. If settings stay open with an error, your draft is retained so you can resolve the problem and retry.
+
 - If another viewer saved while you were editing, your draft is retained. Choose **Reload saved board**, confirm that you want to discard the draft, then reapply your changes and save again.
 - Keep at least one transport mode for each filtered stop, use whole-number departure limits from 1 to 20, and select stations from search results.
 - The collection supports up to 20 cards, 20 stop entries across all cards and a 64 KiB configuration request. Reusing a station on two cards counts as two entries. Reduce unnecessary entries if a limit is reported.

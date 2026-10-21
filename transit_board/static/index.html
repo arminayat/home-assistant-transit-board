@@ -29,11 +29,16 @@
     </div>
     <section id="cards" aria-label="Transit cards"></section>
     <section id="settings-panel" aria-labelledby="settings-heading" hidden>
-      <h2 id="settings-heading">Card settings</h2>
-      <p>Saving changes updates this shared dashboard for everyone in your Home Assistant.</p>
+      <div class="settings-header">
+        <h2 id="settings-heading">Card settings</h2>
+        <p>Give your card a title and choose the departures you want to see.</p>
+      </div>
       <p id="removal-notice" hidden>This card will be removed for everyone when you save. Cancel keeps it.</p>
       <div id="editor"></div>
-      <div class="actions"><button id="save" type="button" disabled>Save</button><button id="cancel" type="button">Cancel</button><button id="remove-card" type="button" class="danger">Remove card</button></div>
+      <div class="settings-footer">
+        <p class="hint">Changes are shared with everyone in your Home Assistant.</p>
+        <div class="actions"><button id="save" type="button" disabled>Save</button><button id="cancel" type="button">Cancel</button><button id="remove-card" type="button" class="danger">Remove card</button></div>
+      </div>
     </section>
     <footer>
       <p>Transit data from the public BVG REST service. Check the operator for last-minute changes.</p>

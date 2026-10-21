@@ -8,4 +8,4 @@ Supports **amd64** and **aarch64**, accessed through Home Assistant Ingress. Dep
 
 See [app documentation](https://github.com/arminayat/home-assistant-transit-board/blob/main/transit_board/DOCS.md), the [setup guide](https://github.com/arminayat/home-assistant-transit-board/blob/main/docs/installation.md), [troubleshooting](https://github.com/arminayat/home-assistant-transit-board/blob/main/docs/troubleshooting.md), and [release notes](https://github.com/arminayat/home-assistant-transit-board/blob/main/transit_board/CHANGELOG.md).
 
-Beta **0.1.0-beta.2**. Existing beta 1 settings migrate automatically into the first card; reload older pages after upgrading. No browser or live Home Assistant acceptance result is claimed.
+Beta **0.1.0-beta.3**. Existing beta 1 settings migrate automatically into the first card; reload older pages after upgrading. No browser or live Home Assistant acceptance result is claimed.

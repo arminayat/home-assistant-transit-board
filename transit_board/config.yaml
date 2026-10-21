@@ -1,5 +1,5 @@
 name: Transit Board
-version: "0.1.0-beta.2"
+version: "0.1.0-beta.3"
 slug: transit_board
 description: A shared Berlin and Brandenburg departure board with visual station setup.
 url: https://github.com/arminayat/home-assistant-transit-board

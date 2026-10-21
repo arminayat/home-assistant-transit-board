@@ -10,7 +10,7 @@ Install the app and add departure cards for the stations and services you want. 
 
 ## Quick start
 
-Requires a Home Assistant installation with **Supervisor and Apps**, on **amd64** or **aarch64**. The current version is **0.1.0-beta.2**.
+Requires a Home Assistant installation with **Supervisor and Apps**, on **amd64** or **aarch64**. The current version is **0.1.0-beta.3**.
 
 [![Add app repository to Home Assistant](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Farminayat%2Fhome-assistant-transit-board)
 

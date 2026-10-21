@@ -92,6 +92,39 @@ test('a stale background read cannot roll back a successful save', async () => {
   assert.equal(state.draft.cards[0].title, 'New board');
 });
 
+test('raw invalid editor input fences an in-flight read and preserves the original save revision', async () => {
+  const pending = deferred();
+  let reads = 0;
+  let submittedRevision;
+  const state = session(() => ++reads === 1 ? Promise.resolve(snapshot()) : pending.promise,
+    async (_value, etag) => { submittedRevision = etag; throw new Error('Changed elsewhere'); });
+  await state.refresh();
+  const refreshing = state.refresh();
+  state.invalidateRefresh();
+  pending.resolve(snapshot('Remote household change', '"2"'));
+  await refreshing;
+  assert.equal(state.saved.etag, '"1"');
+  assert.equal(state.draft.cards[0].title, 'Home');
+  state.edit({ cards: [{ ...state.draft.cards[0], max_departures: 7 }] });
+  await state.save();
+  assert.equal(submittedRevision, '"1"', 'Correction must send the original revision so a remote change conflicts.');
+  assert.equal(state.saved.etag, '"1"');
+  assert.match(state.error, /elsewhere/);
+  assert.equal(state.dirty, true);
+});
+
+test('invalidating an editor refresh preserves existing model validation errors', async () => {
+  const state = session(async () => snapshot());
+  await state.refresh();
+  state.edit({ cards: null });
+  const error = state.validationError;
+  assert.ok(error);
+  state.invalidateRefresh();
+  assert.equal(state.validationError, error);
+  assert.equal(state.dirty, true);
+  assert.equal(state.draft.cards[0].title, 'Home');
+});
+
 test('typing while an explicit reload is in flight preserves the new draft', async () => {
   const pending = deferred();
   let reads = 0;

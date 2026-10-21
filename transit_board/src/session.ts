@@ -20,6 +20,9 @@ export class BoardSession {
 
   get dirty(): boolean { return Boolean(this.validationError) || !same(this.draft, this.saved?.config); }
 
+  // Raw editor edits may be invalid without producing a new model snapshot.
+  invalidateRefresh(): void { this.generation += 1; }
+
   edit(value: unknown): void {
     this.generation += 1;
     this.notice = '';

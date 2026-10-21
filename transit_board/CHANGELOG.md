@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.0-beta.3
+
+- Close settings after successful Save and show the updated card.
+- Preserve the open editor and draft when saving fails or conflicts.
+- Polish form spacing, controls and interaction feedback.
+- Block invalid departure limits while preserving your draft for correction or cancellation.
+
+Reload the Web UI after updating. No new migration or environment variable is required. Browser and live Home Assistant acceptance remain unverified.
+
 ## 0.1.0-beta.2
 
 - Add multiple shared departure cards, each with a title, stations, modes, line/direction filters and departure limit.

@@ -2,7 +2,7 @@
 
 [← README](../README.md) · [Installation](installation.md) · [Troubleshooting](troubleshooting.md)
 
-Open Transit Board through Home Assistant and choose **+ Add card**. Search for a station, select a result and choose **Add stop**. Set a title and any filters, then choose **Save**. Use a card's **Settings** gear to edit it later. Changes appear in your local preview before saving; **Cancel** discards unsaved edits. No YAML editing is needed.
+Open Transit Board through Home Assistant and choose **+ Add card**. Search for a station, select a result and choose **Add stop**. Set a title and any filters, then choose **Save**. A successful save closes settings and returns to the updated card; a failed or conflicting save keeps the editor open with your draft and an error. Use a card's **Settings** gear to edit it later. Changes appear in your local preview before saving; **Cancel** discards unsaved edits. No YAML editing is needed.
 
 Each card has independent settings. You can use the same station on several cards, such as a bus card and a train card, or one card per direction. One inline editor is open at a time. **Remove card** asks for confirmation for a saved card and marks it for removal in your draft; choose **Save** to apply the removal or **Cancel** to restore it. Removing or cancelling a new, unsaved card simply drops that draft.
 
