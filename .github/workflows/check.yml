@@ -1,0 +1,30 @@
+name: Check
+
+on:
+  push:
+    branches: [main, "armin/**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    uses: ./.github/workflows/quality.yml
+  containers:
+    needs: quality
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-24.04
+          - arch: aarch64
+            runner: ubuntu-24.04-arm
+    uses: ./.github/workflows/container.yml
+    with:
+      arch: ${{ matrix.arch }}
+      runner: ${{ matrix.runner }}
+      version: ${{ needs.quality.outputs.version }}
+      publish: false

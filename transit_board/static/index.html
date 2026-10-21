@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Transit Board</title>
+  <link rel="stylesheet" href="app.css">
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <main>
+    <header>
+      <div><p class="eyebrow">Berlin &amp; Brandenburg</p><h1>Transit Board</h1></div>
+      <button id="settings" type="button" aria-controls="settings-panel" aria-expanded="false" disabled>Settings</button>
+    </header>
+    <p id="intro" hidden>Welcome! Search for your stations below, choose any directions or filters, and save your board.</p>
+    <p id="status" role="status" aria-live="polite">Loading your board…</p>
+    <p id="error" role="alert" hidden></p>
+    <button id="retry" type="button" hidden>Retry settings request</button>
+    <div id="shared-change" role="status" hidden>
+      <p>Someone else saved changes. Your draft is kept. Reloading will discard your unsaved changes.</p>
+      <button id="reload" type="button">Reload saved board</button>
+    </div>
+    <section id="board" aria-label="Departures"></section>
+    <section id="settings-panel" aria-labelledby="settings-heading" hidden>
+      <h2 id="settings-heading">Settings</h2>
+      <p>This board is shared. Saving changes updates it for everyone in your Home Assistant.</p>
+      <div id="editor"></div>
+      <div class="actions"><button id="save" type="button" disabled>Save</button><button id="cancel" type="button">Cancel</button></div>
+    </section>
+    <footer>
+      <p>Transit data from the public BVG REST service. Check the operator for last-minute changes.</p>
+      <a href="https://github.com/arminayat/home-assistant-transit-board" target="_blank" rel="noopener noreferrer">Help &amp; source code</a>
+    </footer>
+  </main>
+</body>
+</html>

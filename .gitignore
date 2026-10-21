@@ -1,0 +1,8 @@
+**/node_modules/
+/transit_board/dist/
+/transit_board/data/
+/transit_board/.dev-data/
+.DS_Store
+*.log
+.env
+.env.*

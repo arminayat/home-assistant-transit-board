@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Installation and troubleshooting
+    url: https://github.com/arminayat/home-assistant-transit-board/blob/main/docs/troubleshooting.md
+    about: Read setup and troubleshooting before opening an issue.
+  - name: Report a vulnerability privately
+    url: https://github.com/arminayat/home-assistant-transit-board/security/advisories/new
+    about: Do not disclose security vulnerabilities in public issues.

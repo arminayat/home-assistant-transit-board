@@ -1,0 +1,46 @@
+name: Source and app checks
+
+on:
+  workflow_call:
+    outputs:
+      version:
+        description: Version declared by the app manifest
+        value: ${{ jobs.check.outputs.version }}
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.manifest.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: transit_board/package-lock.json
+      - name: Install locked development dependencies
+        working-directory: transit_board
+        run: npm ci
+      - name: Check types, behavior, build and documentation
+        working-directory: transit_board
+        run: npm run check
+      - name: Lint Home Assistant app manifest
+        uses: frenck/action-app-linter@b9cfd1bc62ba60d2c4fc96317b5f7ada5923f4a7 # v2.21.1
+        with:
+          path: ./transit_board
+      - name: Read the quoted manifest version
+        id: manifest
+        run: |
+          node --input-type=module <<'JS'
+          import { readFileSync, appendFileSync } from 'node:fs';
+          const source = readFileSync('transit_board/config.yaml', 'utf8');
+          const version = source.match(/^version: "([0-9]+\.[0-9]+\.[0-9]+(?:-[a-zA-Z0-9.-]+)?)"$/m)?.[1];
+          if (!version) throw new Error('App version must be a quoted semantic version.');
+          appendFileSync(process.env.GITHUB_OUTPUT, `version=${version}\n`);
+          JS

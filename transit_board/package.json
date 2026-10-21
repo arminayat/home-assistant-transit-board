@@ -1,0 +1,27 @@
+{
+  "name": "home-assistant-transit-board",
+  "version": "0.1.0-beta.1",
+  "description": "A native Home Assistant App for shared Berlin and Brandenburg departure boards",
+  "type": "module",
+  "private": true,
+  "license": "MIT",
+  "engines": { "node": ">=24.0.0" },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "npm run build && node --test tests/*.test.mjs",
+    "check:docs": "node scripts/check-docs.mjs",
+    "check": "npm run typecheck && npm test && node scripts/check-package.mjs && npm run check:docs",
+    "dev": "npm run build && node dist/server.js --dev",
+    "start": "node dist/server.js"
+  },
+  "dependencies": {
+    "transit-board-core": "https://codeload.github.com/arminayat/transit-board-card/tar.gz/8fec0c7f6058525a91ab31143a41b566fd078a0f"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "esbuild": "0.28.2",
+    "happy-dom": "21.0.4",
+    "typescript": "7.0.2"
+  }
+}

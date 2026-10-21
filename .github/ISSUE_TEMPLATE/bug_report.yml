@@ -1,0 +1,61 @@
+name: Bug report
+description: Report a reproducible Transit Board problem.
+title: "Bug: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Check the troubleshooting guide and existing issues first. Report security vulnerabilities privately through SECURITY.md.
+        Remove tokens, private hostnames and personal station selections. Do not attach app backups or complete Home Assistant exports.
+  - type: input
+    id: app_version
+    attributes:
+      label: Transit Board app version
+      placeholder: 0.1.0-beta.1
+    validations:
+      required: true
+  - type: input
+    id: home_assistant
+    attributes:
+      label: Home Assistant and Home Assistant OS versions
+      description: Include both versions, or explain the installation type if OS is not used.
+    validations:
+      required: true
+  - type: input
+    id: supervisor
+    attributes:
+      label: Supervisor version
+    validations:
+      required: true
+  - type: dropdown
+    id: architecture
+    attributes:
+      label: System architecture
+      options:
+        - amd64
+        - aarch64
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Browser or companion app version
+      description: Include the device type for display or connectivity problems.
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: Include expected behavior and what actually happened.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Sanitized app logs or visible error
+      description: A short relevant excerpt is enough. Review it for secrets and personal information.
+      render: text
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Optional screenshots or a small fabricated configuration example.
