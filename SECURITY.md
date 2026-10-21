@@ -14,7 +14,7 @@ Do not attach tokens, complete logs containing secrets, Home Assistant `.storage
 
 ## Security boundaries
 
-Production access is through Home Assistant Ingress. The app does not expose a host port or call Home Assistant APIs. Every user allowed to open the app shares one board and can edit it; this shared-write behavior is intentional.
+Production access is through Home Assistant Ingress. The app does not expose a host port or call Home Assistant APIs. Every user allowed to open the app shares the household's card collection and can edit it; this shared-write behavior is intentional.
 
 Report suspected Ingress bypasses, unsafe handling of configuration or external data, unintended disclosure and failures that can damage the saved configuration through the private process. Ordinary UI bugs, incorrect transit data and provider outages belong in [public bug reports](https://github.com/arminayat/home-assistant-transit-board/issues/new?template=bug_report.yml).
 

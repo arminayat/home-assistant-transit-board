@@ -9,7 +9,7 @@ await Promise.all([
     format: 'iife', target: ['es2022'], minify: true, legalComments: 'inline',
     banner: { js: `/*! Transit Board App ${version} | MIT | see THIRD_PARTY_NOTICES.md */` } }),
   build({ entryPoints: { server: 'server/index.ts', 'server-lib': 'server/app.ts',
-    client: 'src/client.ts', session: 'src/session.ts' },
+    client: 'src/client.ts', session: 'src/session.ts', config: 'src/config.ts' },
     outdir: 'dist', bundle: true, platform: 'node', format: 'esm', target: ['node22'],
     packages: 'bundle', legalComments: 'inline' }),
   copyFile('static/index.html', 'dist/public/index.html'),

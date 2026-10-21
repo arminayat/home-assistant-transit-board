@@ -13,8 +13,9 @@ const compiled = await build({
   bundle: true, write: false, platform: "node", format: "esm", target: "node22",
 });
 const { createAppServer } = await import(`data:text/javascript;base64,${Buffer.from(compiled.outputFiles[0].contents).toString("base64")}`);
-const empty = { type: "custom:transit-board-card", stops: [], max_departures: 5 };
-const config = (title) => ({ ...empty, title, stops: [{ id: "100001", name: "Example station" }] });
+const empty = { cards: [] };
+const board = (title) => ({ type: "custom:transit-board-card", title, stops: [{ id: "100001", name: "Example station" }], max_departures: 5 });
+const config = (title) => ({ cards: [{ id: "first", ...board(title) }] });
 const headers = (etag) => ({ "Content-Type": "application/json", "X-Transit-Board": "1", ...(etag ? { "If-Match": etag } : {}) });
 
 async function fixture(t, { development = true, stored, peer, directoryInsteadOfConfig = false } = {}) {
@@ -61,12 +62,12 @@ test("starts with a normalized empty board without creating storage", async (t) 
 test("normalizes, atomically persists and reloads the saved board", async (t) => {
   const f = await fixture(t);
   const initial = await f.read();
-  const value = { ...config("  Example board  "), stops: [{ id: "100001", name: " Station ", lines: [" u5 ", "U5"] }] };
+  const value = { cards: [{ id: "first", ...board("  Example board  "), stops: [{ id: "100001", name: " Station ", lines: [" u5 ", "U5"] }] }] };
   const saved = await f.save(value, initial.headers.get("etag"));
   assert.equal(saved.status, 200);
   const body = await saved.json();
-  assert.equal(body.title, "Example board");
-  assert.deepEqual(body.stops, [{ id: "100001", name: "Station", lines: ["U5"] }]);
+  assert.equal(body.cards[0].title, "Example board");
+  assert.deepEqual(body.cards[0].stops, [{ id: "100001", name: "Station", lines: ["U5"] }]);
   assert.notEqual(saved.headers.get("etag"), initial.headers.get("etag"));
   assert.deepEqual(JSON.parse(await readFile(join(f.dataDir, "config.json"), "utf8")), body);
   assert.deepEqual(await readdir(f.dataDir), ["config.json"]);
@@ -101,7 +102,7 @@ test("requires conditional saves and rejects stale snapshots without overwriting
   const stale = await f.save(config("Stale"), etag);
   assert.equal(stale.status, 412);
   assert.match((await stale.json()).error, /changed elsewhere/);
-  assert.equal((await (await f.read()).json()).title, "First");
+  assert.equal((await (await f.read()).json()).cards[0].title, "First");
 });
 
 test("serializes simultaneous saves so exactly one writer succeeds", async (t) => {
@@ -122,16 +123,18 @@ test("validates stop count and upstream configuration without changing the saved
   const initial = await f.read();
   const etag = initial.headers.get("etag");
   const cases = [
-    { ...empty, stops: Array.from({ length: 21 }, (_, index) => ({ id: String(index), name: "Example" })) },
-    { ...empty, max_departures: 0 },
-    { ...empty, stops: [{ id: "not-numeric", name: "Example" }] },
-    { ...empty, stops: [{ id: "100001", name: "Example", products: [] }] },
+    { cards: [{ id: "first", ...board("Example"), stops: Array.from({ length: 21 }, (_, index) => ({ id: String(index), name: "Example" })) }] },
+    { cards: [{ id: "first", ...board("Example"), max_departures: 0 }] },
+    { cards: [{ id: "first", ...board("Example"), stops: [{ id: "not-numeric", name: "Example" }] }] },
+    { cards: [{ id: "first", ...board("Example"), stops: [{ id: "100001", name: "Example", products: [] }] }] },
+    { cards: [config("Example").cards[0], config("Duplicate").cards[0]] },
+    { cards: Array.from({ length: 21 }, (_, index) => ({ id: String(index), type: "custom:transit-board-card", stops: [], max_departures: 5 })) },
   ];
   for (const value of cases) assert.equal((await f.save(value, etag)).status, 400);
   const response = await f.read();
   assert.equal(response.headers.get("etag"), etag);
   assert.deepEqual(await response.json(), empty);
-  const valid = { ...empty, stops: Array.from({ length: 20 }, (_, index) => ({ id: String(index), name: "Example" })) };
+  const valid = { cards: [{ id: "first", ...board("Example"), stops: Array.from({ length: 20 }, (_, index) => ({ id: String(index), name: "Example" })) }] };
   assert.equal((await f.save(valid, etag)).status, 200);
 });
 
@@ -139,7 +142,7 @@ test("rejects oversized bodies and malformed JSON", async (t) => {
   const f = await fixture(t);
   const initial = await f.read();
   const etag = initial.headers.get("etag");
-  const oversized = await f.save({ ...empty, title: "x".repeat(65_536) }, etag);
+  const oversized = await f.save(config("x".repeat(65_536)), etag);
   assert.equal(oversized.status, 413);
   const malformed = await fetch(`${f.origin}/api/config`, { method: "PUT", headers: headers(etag), body: "{" });
   assert.equal(malformed.status, 400);
@@ -240,12 +243,112 @@ test("a failed disk write keeps the prior snapshot and does not poison later sav
   await writeFile(f.dataDir, "storage temporarily unavailable");
   const failure = await f.save(config("Failed write"), etag);
   assert.equal(failure.status, 500);
-  assert.equal((await (await f.read()).json()).title, "Original");
-  assert.equal(JSON.parse(await readFile(join(previous, "config.json"), "utf8")).title, "Original");
+  assert.equal((await (await f.read()).json()).cards[0].title, "Original");
+  assert.equal(JSON.parse(await readFile(join(previous, "config.json"), "utf8")).cards[0].title, "Original");
   await rm(f.dataDir);
   await rename(previous, f.dataDir);
   assert.equal((await f.save(config("Recovered"), etag)).status, 200);
-  assert.equal((await (await f.read()).json()).title, "Recovered");
+  assert.equal((await (await f.read()).json()).cards[0].title, "Recovered");
+});
+
+test("migrates legacy settings on read, retains exact source until save and backs it up once", async (t) => {
+  const legacy = { ...board("Original"), max_departures: 9,
+    stops: [{ id: "100001", name: "Example station", products: ["bus"], lines: ["240"],
+      direction: { id: "100002", name: "Example terminus" } }] };
+  const original = `  ${JSON.stringify(legacy, null, 2)}\n`;
+  const f = await fixture(t, { stored: original });
+  const initial = await f.read();
+  const migrated = await initial.json();
+  assert.deepEqual(migrated, { cards: [{ id: "legacy", ...legacy }] });
+  assert.equal(await readFile(join(f.dataDir, "config.json"), "utf8"), original);
+  assert.deepEqual(await readdir(f.dataDir), ["config.json"]);
+  const restarted = createAppServer({ dataDir: f.dataDir, staticDir: f.staticDir, development: true });
+  restarted.listen(0, "127.0.0.1");
+  await once(restarted, "listening");
+  try {
+    const response = await fetch(`http://127.0.0.1:${restarted.address().port}/api/config`);
+    assert.equal(response.headers.get("etag"), initial.headers.get("etag"));
+    assert.deepEqual(await response.json(), migrated);
+  } finally {
+    restarted.closeAllConnections();
+    await new Promise((resolve) => restarted.close(resolve));
+  }
+  const next = { cards: [...migrated.cards, { id: "second", ...board("Second card"),
+    stops: [{ ...legacy.stops[0], lines: ["N40"] }] }] };
+  const saved = await f.save(next, initial.headers.get("etag"));
+  assert.equal(saved.status, 200);
+  assert.deepEqual(await saved.json(), next);
+  assert.equal(await readFile(join(f.dataDir, "config.v1.backup.json"), "utf8"), original);
+  assert.deepEqual(JSON.parse(await readFile(join(f.dataDir, "config.json"), "utf8")), next);
+  const changed = { cards: next.cards.map((card) => card.id === "second" ? { ...card, title: "Changed second card" } : card) };
+  const secondSave = await f.save(changed, saved.headers.get("etag"));
+  assert.equal(secondSave.status, 200);
+  assert.deepEqual((await (await f.read()).json()).cards[0], migrated.cards[0]);
+  assert.equal(await readFile(join(f.dataDir, "config.v1.backup.json"), "utf8"), original);
+});
+
+test("old clients cannot PUT a legacy card over a collection", async (t) => {
+  const source = JSON.stringify(config("Existing collection"));
+  const f = await fixture(t, { stored: source });
+  const initial = await f.read();
+  const response = await f.save(board("Stale client"), initial.headers.get("etag"));
+  assert.equal(response.status, 400);
+  assert.match((await response.json()).error, /Reload the Transit Board App/);
+  assert.equal(await readFile(join(f.dataDir, "config.json"), "utf8"), source);
+});
+
+test("an existing migration backup is preserved and must match the original before saving", async (t) => {
+  const original = JSON.stringify(board("Legacy source"));
+  for (const backup of [original, "An older backup that must be preserved"]) {
+    const f = await fixture(t, { stored: original });
+    await writeFile(join(f.dataDir, "config.v1.backup.json"), backup);
+    const initial = await f.read();
+    const response = await f.save(config("Updated collection"), initial.headers.get("etag"));
+    assert.equal(response.status, backup === original ? 200 : 500);
+    if (backup !== original) {
+      assert.match((await response.json()).error, /could not be safely backed up/);
+      assert.equal(await readFile(join(f.dataDir, "config.json"), "utf8"), original);
+    }
+    assert.equal(await readFile(join(f.dataDir, "config.v1.backup.json"), "utf8"), backup);
+  }
+});
+
+test("migration backup failures preserve the legacy source and current snapshot", async (t) => {
+  const original = JSON.stringify(board("Legacy source"));
+  const f = await fixture(t, { stored: original });
+  await mkdir(join(f.dataDir, "config.v1.backup.json"));
+  const initial = await f.read();
+  const response = await f.save(config("Updated collection"), initial.headers.get("etag"));
+  assert.equal(response.status, 500);
+  assert.match((await response.json()).error, /safely backed up/);
+  assert.equal(await readFile(join(f.dataDir, "config.json"), "utf8"), original);
+  assert.equal((await f.read()).headers.get("etag"), initial.headers.get("etag"));
+});
+
+test("malformed legacy and collection documents are preserved without a backup or reset", async (t) => {
+  for (const value of [{}, { ...board("Bad legacy"), stops: null }, { cards: null },
+    { cards: [config("One").cards[0], config("Duplicate").cards[0]] }]) {
+    const original = JSON.stringify(value);
+    const f = await fixture(t, { stored: original });
+    assert.equal((await f.read()).status, 503);
+    assert.equal((await f.save(empty, '"replacement"')).status, 503);
+    assert.equal(await readFile(join(f.dataDir, "config.json"), "utf8"), original);
+    assert.deepEqual(await readdir(f.dataDir), ["config.json"]);
+  }
+});
+
+test("an oversized migrated legacy document is preserved with actionable recovery guidance", async (t) => {
+  const legacy = { ...board(""), stops: [] };
+  const overhead = Buffer.byteLength(JSON.stringify(legacy));
+  legacy.title = "x".repeat(65_536 - overhead);
+  const original = JSON.stringify(legacy);
+  assert.equal(Buffer.byteLength(original), 65_536);
+  const f = await fixture(t, { stored: original });
+  const response = await f.read();
+  assert.equal(response.status, 503);
+  assert.match((await response.json()).error, /migration limit.*previous App version.*smaller backup/);
+  assert.equal(await readFile(join(f.dataDir, "config.json"), "utf8"), original);
+  assert.deepEqual(await readdir(f.dataDir), ["config.json"]);
 });
 
 test("the development CLI saves under its working directory and shuts down on SIGTERM", async (t) => {
@@ -283,7 +386,7 @@ test("the development CLI saves under its working directory and shuts down on SI
   });
   assert.equal(response.status, 200);
   const stored = JSON.parse(await readFile(join(root, ".dev-data", "config.json"), "utf8"));
-  assert.equal(stored.title, "CLI board");
+  assert.equal(stored.cards[0].title, "CLI board");
   child.kill("SIGTERM");
   assert.deepEqual(await exited, [0, null]);
 });

@@ -1,7 +1,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import { mkdir, open, readFile, rename, rm, stat } from "node:fs/promises";
 import { join } from "node:path";
-import { MAX_BODY_BYTES, normalizeAppConfig } from "../src/config.ts";
+import { DEFAULT_APP_CONFIG, MAX_BODY_BYTES, migrateSavedConfig, normalizeAppConfig } from "../src/config.ts";
 
 export class HttpError extends Error {
   status: number;
@@ -24,9 +24,10 @@ function snapshot(value: unknown): Snapshot {
 export class ConfigStore {
   private readonly file: string;
   private readonly ready: Promise<void>;
-  private current = snapshot({});
+  private current = snapshot(DEFAULT_APP_CONFIG);
   private loadError?: HttpError;
   private writes: Promise<void> = Promise.resolve();
+  private legacySource?: Buffer;
 
   constructor(private readonly dataDir: string) {
     this.file = join(dataDir, "config.json");
@@ -36,11 +37,15 @@ export class ConfigStore {
   private async load(): Promise<void> {
     try {
       if ((await stat(this.file)).size > MAX_BODY_BYTES) throw new Error("Stored configuration is too large.");
-      this.current = snapshot(JSON.parse(await readFile(this.file, "utf8")));
+      const source = await readFile(this.file);
+      const value: unknown = JSON.parse(source.toString("utf8"));
+      this.current = snapshot(migrateSavedConfig(value));
+      if (value && typeof value === "object" && !("cards" in value)) this.legacySource = source;
     } catch (error) {
       if (error instanceof Error && "code" in error && error.code === "ENOENT") return;
       this.loadError = new HttpError(503,
-        "The saved board could not be read. Its file has been preserved. Restore /data/config.json from a backup, or move it aside and restart the App to start fresh.");
+        error instanceof RangeError ? `${error.message} The saved file has been preserved.` :
+          "The saved board could not be read. Its file has been preserved. Restore /data/config.json from a backup, or move it aside and restart the App to start fresh.");
     }
   }
 
@@ -48,6 +53,44 @@ export class ConfigStore {
     await this.ready;
     if (this.loadError) throw this.loadError;
     return this.current;
+  }
+
+  private async syncDirectory(): Promise<void> {
+    const directory = await open(this.dataDir, "r");
+    try {
+      await directory.sync();
+    } finally {
+      await directory.close();
+    }
+  }
+
+  private async backupLegacy(): Promise<void> {
+    if (!this.legacySource) return;
+    const backup = join(this.dataDir, "config.v1.backup.json");
+    let created = false;
+    try {
+      const file = await open(backup, "wx", 0o600);
+      created = true;
+      try {
+        await file.writeFile(this.legacySource);
+        await file.sync();
+      } finally {
+        await file.close();
+      }
+      // Make the backup directory entry durable before replacing the legacy source.
+      await this.syncDirectory();
+    } catch (error) {
+      if (created) await rm(backup, { force: true }).catch(() => {});
+      if (!created && error instanceof Error && "code" in error && error.code === "EEXIST") {
+        try {
+          if ((await readFile(backup)).equals(this.legacySource)) {
+            await this.syncDirectory();
+            return;
+          }
+        } catch { /* An unreadable or mismatched backup must never be replaced. */ }
+      }
+      throw new HttpError(500, "The original single-card settings could not be safely backed up. Check App storage and any existing config.v1.backup.json before retrying. The saved configuration has been preserved.");
+    }
   }
 
   async save(value: unknown, expected: string): Promise<Snapshot> {
@@ -72,10 +115,13 @@ export class ConfigStore {
         } finally {
           await file.close();
         }
+        await this.backupLegacy();
         await rename(temporary, this.file);
         this.current = next;
+        this.legacySource = undefined;
         return next;
-      } catch {
+      } catch (error) {
+        if (error instanceof HttpError) throw error;
         throw new HttpError(500, "The board could not be saved. The previous saved configuration has been kept. Try again after checking App storage.");
       } finally {
         await rm(temporary, { force: true }).catch(() => {});

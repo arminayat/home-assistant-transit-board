@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { BoardSession } from '../dist/session.js';
 
-const config = (title = 'Home') => ({ type: 'custom:transit-board-card', title, stops: [], max_departures: 5 });
+const config = (title = 'Home') => ({ cards: [{ id: 'first', type: 'custom:transit-board-card', title, stops: [], max_departures: 5 }] });
 const snapshot = (title = 'Home', etag = '"1"') => ({ config: config(title), etag });
 function deferred() { let resolve; let reject; const promise = new Promise((a, b) => { resolve = a; reject = b; }); return { promise, resolve, reject }; }
 const session = (read, write) => new BoardSession(() => {}, read, write);
@@ -15,16 +15,16 @@ test('first load, preview, explicit save and cancel keep a shared saved revision
   await state.refresh();
   assert.equal(state.dirty, false);
   state.edit(config('Work'));
-  assert.equal(state.saved.config.title, 'Home');
+  assert.equal(state.saved.config.cards[0].title, 'Home');
   assert.equal(state.dirty, true);
   assert.equal(calls.length, 0);
   await state.save();
   assert.equal(calls[0].etag, '"1"');
-  assert.equal(state.saved.config.title, 'Work');
+  assert.equal(state.saved.config.cards[0].title, 'Work');
   assert.equal(state.dirty, false);
   state.edit(config('Draft'));
   state.cancel();
-  assert.equal(state.draft.title, 'Work');
+  assert.equal(state.draft.cards[0].title, 'Work');
   assert.equal(state.dirty, false);
 });
 
@@ -34,15 +34,15 @@ test('remote updates apply to a clean board and preserve dirty drafts', async ()
   await state.refresh();
   remote = snapshot('Office', '"2"');
   await state.refresh();
-  assert.equal(state.draft.title, 'Office');
+  assert.equal(state.draft.cards[0].title, 'Office');
   state.edit(config('My draft'));
   remote = snapshot('Someone else', '"3"');
   await state.refresh();
   assert.equal(state.saved.etag, '"2"');
-  assert.equal(state.draft.title, 'My draft');
+  assert.equal(state.draft.cards[0].title, 'My draft');
   assert.equal(state.remote.etag, '"3"');
   state.cancel();
-  assert.equal(state.draft.title, 'Someone else');
+  assert.equal(state.draft.cards[0].title, 'Someone else');
 });
 
 test('edits made during a save remain unsaved after the submitted snapshot succeeds', async () => {
@@ -55,8 +55,8 @@ test('edits made during a save remain unsaved after the submitted snapshot succe
   state.edit(config('Still typing'));
   pending.resolve({ config: submitted, etag: '"2"' });
   await saving;
-  assert.equal(state.saved.config.title, 'Submitted');
-  assert.equal(state.draft.title, 'Still typing');
+  assert.equal(state.saved.config.cards[0].title, 'Submitted');
+  assert.equal(state.draft.cards[0].title, 'Still typing');
   assert.equal(state.dirty, true);
   assert.match(state.notice, /more unsaved/);
 });
@@ -72,9 +72,9 @@ test('a remote change reverted to the saved revision cannot block saving or repl
   remote = snapshot();
   await state.refresh();
   assert.equal(state.remote, undefined);
-  assert.equal(state.draft.title, 'My draft');
+  assert.equal(state.draft.cards[0].title, 'My draft');
   state.cancel();
-  assert.equal(state.draft.title, 'Home');
+  assert.equal(state.draft.cards[0].title, 'Home');
 });
 
 test('a stale background read cannot roll back a successful save', async () => {
@@ -89,7 +89,7 @@ test('a stale background read cannot roll back a successful save', async () => {
   oldRead.resolve(snapshot());
   await refreshing;
   assert.equal(state.saved.etag, '"2"');
-  assert.equal(state.draft.title, 'New board');
+  assert.equal(state.draft.cards[0].title, 'New board');
 });
 
 test('typing while an explicit reload is in flight preserves the new draft', async () => {
@@ -102,7 +102,7 @@ test('typing while an explicit reload is in flight preserves the new draft', asy
   state.edit(config('New draft'));
   pending.resolve(snapshot('Remote', '"2"'));
   await loading;
-  assert.equal(state.draft.title, 'New draft');
+  assert.equal(state.draft.cards[0].title, 'New draft');
   assert.equal(state.saved.etag, '"1"');
 });
 
@@ -111,7 +111,7 @@ test('failed and conflicting saves preserve the submitted draft and revision', a
   await state.refresh();
   state.edit(config('Keep me'));
   await state.save();
-  assert.equal(state.draft.title, 'Keep me');
+  assert.equal(state.draft.cards[0].title, 'Keep me');
   assert.equal(state.saved.etag, '"1"');
   assert.equal(state.saving, false);
   assert.match(state.error, /elsewhere/);
@@ -136,13 +136,31 @@ test('validation blocks a save without dropping the last valid preview', async (
   let writes = 0;
   const state = session(async () => snapshot(), async () => { writes++; return snapshot(); });
   await state.refresh();
-  state.edit({ ...config(), stops: Array.from({ length: 21 }, (_, i) => ({ id: String(i), name: 'Stop' })) });
+  state.edit({ cards: [{ ...config().cards[0], stops: Array.from({ length: 21 }, (_, i) => ({ id: String(i), name: 'Stop' })) }] });
   assert.match(state.validationError, /20 stops/);
-  assert.equal(state.draft.stops.length, 0);
+  assert.equal(state.draft.cards[0].stops.length, 0);
   await state.save();
   assert.equal(writes, 0);
   state.edit(config('Valid again'));
   assert.equal(state.validationError, '');
+});
+
+test('saving one of two cards for the same station preserves the other title and filters', async () => {
+  const first = { ...config('Towards the centre').cards[0], stops: [{ id: '101', name: 'Example Square', lines: ['240'] }] };
+  const second = { ...first, id: 'second', title: 'Towards the park', max_departures: 3,
+    stops: [{ id: '101', name: 'Example Square', direction: { id: '202', name: 'Example Park' }, products: ['bus'] }] };
+  const original = { cards: [first, second] };
+  let persisted;
+  const state = session(async () => ({ config: original, etag: '"1"' }), async (value) => {
+    persisted = value; return { config: value, etag: '"2"' };
+  });
+  await state.refresh();
+  state.edit({ cards: state.draft.cards.map((card) => card.id === 'first' ? { ...card, title: 'My morning bus' } : card) });
+  assert.equal(state.saved.config.cards[0].title, first.title, 'Local edits must not mutate the saved snapshot.');
+  await state.save();
+  assert.equal(persisted.cards[0].title, 'My morning bus');
+  assert.deepEqual(persisted.cards[1], second);
+  assert.deepEqual(original.cards, [first, second]);
 });
 
 test('unreadable saved settings are shown as an error and can be retried', async () => {

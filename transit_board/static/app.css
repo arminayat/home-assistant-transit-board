@@ -33,14 +33,24 @@ h1 { margin: 0; font-size: clamp(1.8rem, 5vw, 2.6rem); line-height: 1.2; letter-
 button { padding: 10px 16px; border: 1px solid var(--divider-color); border-radius: 8px;
   background: var(--card-background-color); color: var(--primary-text-color); font: inherit; cursor: pointer; }
 button:disabled { opacity: .55; cursor: default; }
+.icon-button { width: 44px; height: 44px; padding: 10px; display: inline-flex; align-items: center; justify-content: center; flex: none; }
+.icon-button svg { width: 24px; height: 24px; fill: currentColor; }
 button:focus-visible, a:focus-visible { outline: 3px solid var(--primary-color); outline-offset: 3px; }
 #save { background: #14689a; border-color: #14689a; color: white; }
 #error { color: var(--error-color); }
 #shared-change { border: 1px solid var(--divider-color); border-radius: 12px; padding: 4px 16px 16px; margin-bottom: 20px; }
-#settings-panel { padding: 20px; margin-top: 24px; border: 1px solid var(--divider-color); border-radius: 16px;
+#cards { display: grid; gap: 24px; }
+.transit-card { min-width: 0; }
+.card-toolbar { display: flex; justify-content: flex-end; margin-bottom: 6px; }
+.card-toolbar .icon-button { width: 40px; height: 40px; padding: 8px; }
+.welcome { border: 1px dashed var(--divider-color); border-radius: 16px; padding: 24px; }
+.welcome p { max-width: 60ch; }
+.hint { color: var(--secondary-text-color); }
+#settings-panel { padding: 20px; margin-top: 16px; border: 1px solid var(--divider-color); border-radius: 16px;
   background: var(--card-background-color); }
 h2 { margin-top: 0; }
-.actions { display: flex; gap: 12px; margin-top: 20px; }
+.actions { display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap; }
+.danger { color: var(--error-color); margin-left: auto; }
 footer { margin-top: 32px; color: var(--secondary-text-color); font-size: .85rem; }
 a { color: var(--primary-color); }
 @media (max-width: 500px) { main { padding: 16px 12px; } #settings-panel { padding: 16px 12px; } }

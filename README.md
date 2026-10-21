@@ -2,15 +2,15 @@
 
 **Berlin and Brandenburg departures in your Home Assistant sidebar.**
 
-Install the app, choose stations in its visual settings, and open your departure board. Show buses, U-Bahn, S-Bahn and other services, with destinations, platforms, delays and cancellations.
+Install the app and add departure cards for the stations and services you want. Give each card its own title, transport modes, lines and direction, with destinations, platforms, delays and cancellations.
 
 ![Departure-board component showing fictional services at Alexanderplatz](docs/images/board.png)
 
-*Shared departure-board component rendered with sample data. This is not a screenshot of an installed Home Assistant app.*
+*Shared departure-card component rendered with sample data. The app's multi-card controls are not pictured; this is not a screenshot of an installed Home Assistant app.*
 
 ## Quick start
 
-Requires a Home Assistant installation with **Supervisor and Apps**, on **amd64** or **aarch64**. The current version is **0.1.0-beta.1**.
+Requires a Home Assistant installation with **Supervisor and Apps**, on **amd64** or **aarch64**. The current version is **0.1.0-beta.2**.
 
 [![Add app repository to Home Assistant](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Farminayat%2Fhome-assistant-transit-board)
 
@@ -20,13 +20,15 @@ Use the button to prefill the repository URL, or follow these steps:
 2. Add `https://github.com/arminayat/home-assistant-transit-board`.
 3. Find **Transit Board**, install it, and select **Start**.
 4. Select **Open Web UI**. Enable **Show in sidebar** for convenient access.
-5. In Transit Board's settings, search for a station, select it, choose **Add stop**, then **Save**. Settings open automatically for a new board.
+5. Choose **+ Add card**, search for a station, select it, choose **Add stop**, then **Save**.
 
 No API key, YAML, environment variables or dashboard resource is needed. See [Installation](docs/installation.md) for details.
 
 ## Make the board yours
 
-Combine nearby stops, choose transport types, filter lines and directions, and set a title and departure limit. Everyone who can open the app through Home Assistant shares the same board and can edit its settings.
+Create separate cards for buses, trains or different directions—even at the same station. Each card has a **Settings** gear for its title, stops, filters and departure limit. One inline editor opens at a time; **Save** applies changes and **Cancel** discards the draft. Removing a saved card asks for confirmation, then **Save** applies the removal; **Cancel** restores it.
+
+Everyone who can open the app through Home Assistant shares the household's cards and can edit them. Upgrading from beta 1 preserves your previous board as the first card automatically; reload pages left open during the upgrade.
 
 <details>
 <summary>See the station settings component</summary>

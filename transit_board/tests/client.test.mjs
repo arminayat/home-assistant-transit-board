@@ -4,7 +4,7 @@ import { loadConfig, saveConfig, ConflictError } from '../dist/client.js';
 
 const originalFetch = globalThis.fetch;
 afterEach(() => { globalThis.fetch = originalFetch; });
-const config = { type: 'custom:transit-board-card', stops: [], max_departures: 5 };
+const config = { cards: [{ id: 'first', type: 'custom:transit-board-card', stops: [], max_departures: 5 }] };
 const response = (body = config, status = 200, etag = '"1"') => new Response(JSON.stringify(body),
   { status, headers: { 'Content-Type': 'application/json', ...(etag ? { ETag: etag } : {}) } });
 
@@ -32,6 +32,6 @@ test('conflicts, expired sessions and corrupt server state have actionable error
 test('settings without valid configuration or a revision are rejected', async () => {
   globalThis.fetch = async () => response(config, 200, '');
   await assert.rejects(loadConfig(), /without a revision/);
-  globalThis.fetch = async () => response({ stops: 'broken' });
-  await assert.rejects(loadConfig(), /Stops must be a list/);
+  globalThis.fetch = async () => response({ cards: 'broken' });
+  await assert.rejects(loadConfig(), /cards|Cards/);
 });

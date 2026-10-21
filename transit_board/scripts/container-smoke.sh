@@ -40,11 +40,15 @@ for (let attempt = 0; attempt < 30; attempt += 1) {
 assert.ok(healthy, 'The production server did not become healthy through ingress.');
 const response = await request('api/config');
 assert.equal(response.status, 200);
-const board = await response.json();
-assert.equal(board.type, 'custom:transit-board-card');
-assert.ok(Array.isArray(board.stops));
+const collection = await response.json();
+assert.ok(Array.isArray(collection.cards));
+const station = { id: '100001', name: 'Example station' };
+const cards = [
+  { id: 'smoke-buses', type: 'custom:transit-board-card', title: 'Smoke buses', stops: [station], max_departures: 5 },
+  { id: 'smoke-trains', type: 'custom:transit-board-card', title: 'Smoke trains', stops: [station], max_departures: 5 },
+];
 if (process.env.SMOKE_PHASE === 'initial') {
-  assert.equal(board.stops.length, 0, 'A clean install must have no personal/default stops.');
+  assert.deepEqual(collection, { cards: [] }, 'A clean install must have no default cards or personal stops.');
   const page = await request('');
   assert.equal(page.status, 200);
   const html = await page.text();
@@ -63,11 +67,11 @@ if (process.env.SMOKE_PHASE === 'initial') {
       'X-Transit-Board': '1',
       'If-Match': response.headers.get('ETag'),
     },
-    body: JSON.stringify({ ...board, title: 'Smoke board', max_departures: 5 }),
+    body: JSON.stringify({ cards }),
   });
   assert.equal(saved.status, 200, `Configuration write failed: ${await saved.text()}`);
 } else {
-  assert.equal(board.title, 'Smoke board', 'Shared configuration must survive a container restart.');
+  assert.deepEqual(collection, { cards }, 'Both distinct cards and their shared station must survive a container restart.');
 }
 console.log(`Ingress ${process.env.SMOKE_PHASE} checks passed.`);
 JS

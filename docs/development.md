@@ -22,13 +22,15 @@ Development serves `http://127.0.0.1:8099` and stores settings in ignored `.dev-
 
 ## Ownership and invariants
 
-The server owns access through Ingress, shared configuration validation, conditional saves and persistence. It stores one board in `/data/config.json`, limits configuration requests to 64 KiB and 20 stops, writes atomically, and preserves malformed data for recovery.
+The server owns access through Ingress, shared configuration validation, conditional saves and persistence. It stores `AppConfig` as `{ cards: [...] }` in `/data/config.json`, with each card containing a unique `id` plus the upstream `BoardConfig` fields. Limits are 20 cards, 20 aggregate stop entries and 64 KiB. Writes are atomic; malformed data is preserved for recovery.
 
-The frontend owns loading the shared configuration, displaying the departure component, editing settings and reporting save conflicts. The pinned shared components own provider calls, normalized departure data, visual station search, filtering and departure rendering.
+The frontend owns loading the collection, adding/removing cards, one inline editor at a time, local drafts and save conflicts. The pinned shared components own provider calls, normalized departure data, visual station search, filtering and each departure-card rendering.
 
 Keep server authorization independent of untrusted forwarding headers. Preserve the distinction between production Ingress and the loopback-only development server. The app needs neither Home Assistant API access nor user-supplied secrets.
 
-Prevent conflicting edits from overwriting another user's saved settings. Preserve atomic writes and explicit errors; never treat a corrupt file as permission to reset configuration silently. All signed-in users allowed to open Ingress share the same board and write access.
+Prevent conflicting edits from overwriting another user's saved settings. Preserve atomic writes and explicit errors; never treat a corrupt file as permission to reset configuration silently. All signed-in users allowed to open Ingress share the collection and write access.
+
+Missing storage returns `{ cards: [] }`. A legacy single-board file is loaded as one card with ID `legacy`, without rewriting it. Preserve an exact original copy at `config.v1.backup.json` before the first successful new-format save. GET and PUT use the collection shape; reject legacy PUT payloads so an older open page cannot replace the collection.
 
 ## Updating the shared components
 
@@ -54,7 +56,7 @@ Use fabricated data and public central station examples when adding fixtures or 
 Prepare a release on `armin/release`, keeping the app manifest, package version and changelogs aligned. Commit the reviewed source and lockfile, run local checks, and push the branch before its version tag. For this beta, from the repository root:
 
 ```sh
-app_version=0.1.0-beta.1
+app_version=0.1.0-beta.2
 git switch armin/release
 git push origin armin/release
 git tag "v$app_version"

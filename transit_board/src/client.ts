@@ -1,7 +1,6 @@
-import { normalizeAppConfig } from './config.ts';
-import type { BoardConfig } from 'transit-board-core/src/types.ts';
+import { normalizeAppConfig, type AppConfig } from './config.ts';
 
-export interface Snapshot { config: BoardConfig; etag: string }
+export interface Snapshot { config: AppConfig; etag: string }
 
 export class ConflictError extends Error {
   constructor() { super('Someone else saved changes. Your draft is kept. Reload the saved board before editing again.'); }
@@ -36,7 +35,7 @@ async function request(init?: RequestInit): Promise<Snapshot> {
 
 export function loadConfig(): Promise<Snapshot> { return request(); }
 
-export function saveConfig(config: BoardConfig, etag: string): Promise<Snapshot> {
+export function saveConfig(config: AppConfig, etag: string): Promise<Snapshot> {
   return request({ method: 'PUT', headers: { 'Content-Type': 'application/json',
     'X-Transit-Board': '1', 'If-Match': etag }, body: JSON.stringify(normalizeAppConfig(config)) });
 }

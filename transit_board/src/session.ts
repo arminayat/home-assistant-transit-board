@@ -1,14 +1,13 @@
-import { normalizeAppConfig } from './config.ts';
+import { normalizeAppConfig, type AppConfig } from './config.ts';
 import { loadConfig, saveConfig, type Snapshot } from './client.ts';
-import type { BoardConfig } from 'transit-board-core/src/types.ts';
 
-const same = (a: BoardConfig | undefined, b: BoardConfig | undefined): boolean => JSON.stringify(a) === JSON.stringify(b);
+const same = (a: AppConfig | undefined, b: AppConfig | undefined): boolean => JSON.stringify(a) === JSON.stringify(b);
 const message = (error: unknown): string => error instanceof Error ? error.message : 'Settings request failed. Try again.';
 
 /** Owns the saved revision and draft so background updates cannot discard edits. */
 export class BoardSession {
   saved?: Snapshot;
-  draft?: BoardConfig;
+  draft?: AppConfig;
   remote?: Snapshot;
   saving = false;
   loading = false;

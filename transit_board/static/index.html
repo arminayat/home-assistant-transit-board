@@ -12,22 +12,28 @@
   <main>
     <header>
       <div><p class="eyebrow">Berlin &amp; Brandenburg</p><h1>Transit Board</h1></div>
-      <button id="settings" type="button" aria-controls="settings-panel" aria-expanded="false" disabled>Settings</button>
+      <div id="add-card-host"></div>
     </header>
-    <p id="intro" hidden>Welcome! Search for your stations below, choose any directions or filters, and save your board.</p>
-    <p id="status" role="status" aria-live="polite">Loading your board…</p>
+    <section id="intro" class="welcome" hidden>
+      <h2>Your departures, your cards</h2>
+      <p>Add your first card, search for stations, and choose the services you want to see. Cards are shared with everyone in your Home Assistant.</p>
+      <button id="add-first-card" type="button">Add first card</button>
+    </section>
+    <p id="capacity" class="hint" hidden></p>
+    <p id="status" role="status" aria-live="polite">Loading your dashboard…</p>
     <p id="error" role="alert" hidden></p>
     <button id="retry" type="button" hidden>Retry settings request</button>
     <div id="shared-change" role="status" hidden>
       <p>Someone else saved changes. Your draft is kept. Reloading will discard your unsaved changes.</p>
       <button id="reload" type="button">Reload saved board</button>
     </div>
-    <section id="board" aria-label="Departures"></section>
+    <section id="cards" aria-label="Transit cards"></section>
     <section id="settings-panel" aria-labelledby="settings-heading" hidden>
-      <h2 id="settings-heading">Settings</h2>
-      <p>This board is shared. Saving changes updates it for everyone in your Home Assistant.</p>
+      <h2 id="settings-heading">Card settings</h2>
+      <p>Saving changes updates this shared dashboard for everyone in your Home Assistant.</p>
+      <p id="removal-notice" hidden>This card will be removed for everyone when you save. Cancel keeps it.</p>
       <div id="editor"></div>
-      <div class="actions"><button id="save" type="button" disabled>Save</button><button id="cancel" type="button">Cancel</button></div>
+      <div class="actions"><button id="save" type="button" disabled>Save</button><button id="cancel" type="button">Cancel</button><button id="remove-card" type="button" class="danger">Remove card</button></div>
     </section>
     <footer>
       <p>Transit data from the public BVG REST service. Check the operator for last-minute changes.</p>
