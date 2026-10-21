@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { once } from 'node:events';
 import { Script } from 'node:vm';
+import { createHash } from 'node:crypto';
 
 const pkg = JSON.parse(await readFile('package.json', 'utf8'));
 const lock = JSON.parse(await readFile('package-lock.json', 'utf8'));
@@ -16,8 +17,27 @@ assert.equal(pkg.license, 'MIT');
 assert.equal(lock.version, pkg.version);
 assert.equal(lock.packages[''].version, pkg.version);
 assert.equal(lock.packages[''].engines.node, pkg.engines.node);
-assert.match(pkg.dependencies['transit-board-core'], /8fec0c7f6058525a91ab31143a41b566fd078a0f$/);
-assert.ok(lock.packages['node_modules/transit-board-core'].integrity, 'Upstream source needs a locked integrity hash.');
+assert.equal(pkg.dependencies['transit-board-core'], 'file:vendor/transit-board-card');
+assert.equal(lock.packages[''].dependencies['transit-board-core'], pkg.dependencies['transit-board-core']);
+const vendorRoot = 'vendor/transit-board-card';
+const upstreamCommit = '8fec0c7f6058525a91ab31143a41b566fd078a0f';
+const vendorPackage = JSON.parse(await readFile(join(vendorRoot, 'package.json'), 'utf8'));
+const upstream = JSON.parse(await readFile(join(vendorRoot, 'UPSTREAM.json'), 'utf8'));
+assert.equal(lock.packages['node_modules/transit-board-core'].resolved, vendorRoot);
+assert.equal(lock.packages['node_modules/transit-board-core'].link, true);
+assert.equal(lock.packages[vendorRoot].version, vendorPackage.version);
+assert.equal(vendorPackage.license, 'MIT');
+assert.equal(vendorPackage.version, '0.1.0-beta.1');
+assert.equal(vendorPackage.upstreamCommit, upstreamCommit);
+assert.equal(upstream.repository, 'https://github.com/arminayat/transit-board-card');
+assert.equal(upstream.commit, upstreamCommit);
+assert.deepEqual(Object.keys(upstream.files).sort(), ['LICENSE', 'src/api.ts', 'src/board-view.ts',
+  'src/card.ts', 'src/config.ts', 'src/departures.ts', 'src/editor.ts', 'src/index.ts', 'src/styles.ts', 'src/types.ts']);
+for (const [file, expected] of Object.entries(upstream.files)) {
+  assert.match(expected, /^[a-f0-9]{64}$/);
+  const actual = createHash('sha256').update(await readFile(join(vendorRoot, file))).digest('hex');
+  assert.equal(actual, expected, `Vendored source differs from the recorded snapshot: ${file}`);
+}
 const dockerfile = await readFile('Dockerfile', 'utf8');
 assert.ok(dockerfile.includes(`ARG BUILD_VERSION=${pkg.version}\n`), 'Docker default version must match the package.');
 const code = await readFile('dist/public/app.js', 'utf8');
@@ -59,4 +79,4 @@ for (const directory of ['src', 'server', 'static', 'scripts', 'tests']) {
     assert.ok(source.split('\n').length <= 500, `${path} exceeds 500 lines.`);
   }
 }
-console.log('Package passed: pinned source, version, bundle, collection API, ingress assets, licenses and source limits.');
+console.log('Package passed: vendored source hashes, version, bundle, collection API, ingress assets, licenses and source limits.');

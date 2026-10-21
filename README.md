@@ -52,8 +52,6 @@ The public [BVG REST API](https://v6.bvg.transport.rest/) supplies Berlin and Br
 
 This is a **beta**. The images demonstrate the shared components with sample data. Browser testing and acceptance inside Home Assistant have not been performed for this app.
 
-Looking for the separately installed dashboard card? [Transit Board Card](https://github.com/arminayat/transit-board-card) remains a separate project.
-
 ## Get involved
 
 See [Support](SUPPORT.md) for questions, [Contributing](CONTRIBUTING.md) for changes, and the [Code of Conduct](CODE_OF_CONDUCT.md) for participation. Report vulnerabilities through the [private security process](SECURITY.md).

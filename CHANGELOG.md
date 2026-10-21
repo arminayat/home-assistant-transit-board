@@ -7,6 +7,7 @@
 - Keep the household's cards shared, with conflict protection and limits of 20 cards, 20 total stop entries and 64 KiB.
 - Automatically load beta 1's board as the first card, preserving all settings and keeping an original `config.v1.backup.json` before the first successful new-format save.
 - Require pages left open during the upgrade to reload before saving; old single-board writes are rejected.
+- Include the exact MIT component snapshot and verified source hashes locally so builds do not depend on the unavailable original repository.
 
 No manual migration, environment variable or native Home Assistant configuration change is required. Browser and live Home Assistant acceptance remain unverified.
 

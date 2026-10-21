@@ -6,6 +6,7 @@
 - Add **+ Add card**, a Settings gear per card, one inline editor with Save/Cancel, and removal confirmation.
 - Preserve beta 1 settings automatically in the first card and back up the original file before the first successful new-format save.
 - Enforce 20 cards, 20 aggregate stop entries and 64 KiB; keep conflicting saves protected.
+- Build from a local, verified MIT component snapshot instead of fetching the unavailable original repository.
 
 Reload pages left open during the update. No manual migration, new environment variable or native Home Assistant configuration change is required. Browser and live Home Assistant acceptance remain unverified.
 

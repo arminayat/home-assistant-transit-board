@@ -16,7 +16,7 @@
     "start": "node dist/server.js"
   },
   "dependencies": {
-    "transit-board-core": "https://codeload.github.com/arminayat/transit-board-card/tar.gz/8fec0c7f6058525a91ab31143a41b566fd078a0f"
+    "transit-board-core": "file:vendor/transit-board-card"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

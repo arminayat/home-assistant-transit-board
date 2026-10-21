@@ -42,4 +42,4 @@ To recover from an unsuccessful update, restore a Home Assistant backup containi
 
 Back up the app if you want to preserve its station settings. Stop and uninstall **Transit Board** from its Home Assistant page, then remove the repository if no longer needed. Uninstalling can remove app data, so do not treat uninstall/reinstall as a configuration repair procedure.
 
-No dashboard card, resource URL, sensors or database tables need to be removed. The separately installed [Transit Board Card](https://github.com/arminayat/transit-board-card) is independent and is not changed by installing or removing this app.
+No dashboard card, resource URL, sensors or database tables need to be removed. Installing or removing this app does not modify your native Home Assistant dashboards.

@@ -14,7 +14,7 @@ npm run check
 
 Run `npm run dev` for the local loopback-only app on `http://127.0.0.1:8099`. Development settings are stored in ignored `.dev-data/`. This mode is for local development; production access is through Home Assistant Ingress.
 
-See [Development](docs/development.md) for the architecture, commands and pinned shared-component dependency. Do not edit installed dependencies or generated output by hand.
+See [Development](docs/development.md) for the architecture, commands and verified vendored component snapshot. Do not edit installed dependencies or generated output by hand.
 
 ## Changes and verification
 

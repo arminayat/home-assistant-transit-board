@@ -2,7 +2,7 @@
 
 Start with the [README](README.md), then [Installation](docs/installation.md), [Configuration](docs/configuration.md) and [Troubleshooting](docs/troubleshooting.md).
 
-Transit Board is a beta Home Assistant app for Berlin and Brandenburg, accessed through Ingress. It needs Supervisor's Apps support and an amd64 or aarch64 system. It is separate from [Transit Board Card](https://github.com/arminayat/transit-board-card).
+Transit Board is a beta Home Assistant app for Berlin and Brandenburg, accessed through Ingress. It needs Supervisor's Apps support and an amd64 or aarch64 system.
 
 ## Questions and problems
 

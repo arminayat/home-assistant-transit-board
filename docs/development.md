@@ -22,9 +22,9 @@ Development serves `http://127.0.0.1:8099` and stores settings in ignored `.dev-
 
 ## Ownership and invariants
 
-The server owns access through Ingress, shared configuration validation, conditional saves and persistence. It stores `AppConfig` as `{ cards: [...] }` in `/data/config.json`, with each card containing a unique `id` plus the upstream `BoardConfig` fields. Limits are 20 cards, 20 aggregate stop entries and 64 KiB. Writes are atomic; malformed data is preserved for recovery.
+The server owns access through Ingress, shared configuration validation, conditional saves and persistence. It stores `AppConfig` as `{ cards: [...] }` in `/data/config.json`, with each card containing a unique `id` plus the component's `BoardConfig` fields. Limits are 20 cards, 20 aggregate stop entries and 64 KiB. Writes are atomic; malformed data is preserved for recovery.
 
-The frontend owns loading the collection, adding/removing cards, one inline editor at a time, local drafts and save conflicts. The pinned shared components own provider calls, normalized departure data, visual station search, filtering and each departure-card rendering.
+The frontend owns loading the collection, adding/removing cards, one inline editor at a time, local drafts and save conflicts. The vendored components own provider calls, normalized departure data, visual station search, filtering and each departure-card rendering.
 
 Keep server authorization independent of untrusted forwarding headers. Preserve the distinction between production Ingress and the loopback-only development server. The app needs neither Home Assistant API access nor user-supplied secrets.
 
@@ -34,16 +34,18 @@ Missing storage returns `{ cards: [] }`. A legacy single-board file is loaded as
 
 ## Updating the shared components
 
-The build dependency `transit-board-core` is pinned to commit `8fec0c7f6058525a91ab31143a41b566fd078a0f` from [arminayat/transit-board-card](https://github.com/arminayat/transit-board-card). It is MIT-licensed; see [Third-party notices](../THIRD_PARTY_NOTICES.md).
+The build dependency `transit-board-core` resolves to `file:vendor/transit-board-card`. This checked-in MIT snapshot contains nine exact source files and the original license from commit `8fec0c7f6058525a91ab31143a41b566fd078a0f` of the original `https://github.com/arminayat/transit-board-card` repository. That repository is currently unavailable; builds do not fetch it. See [Third-party notices](../THIRD_PARTY_NOTICES.md).
+
+`vendor/transit-board-card/UPSTREAM.json` records the source repository, commit and SHA-256 hashes of all retained originals. Its minimal package metadata records the same commit. Package checks validate the file list, hashes, revision, license and local dependency resolution. Docker copies the snapshot before `npm ci`. Other locked build tools still install through npm.
 
 For an update:
 
-1. Review the upstream diff from the pinned commit to the proposed exact commit, including configuration, editor events, provider requests, lifecycle cleanup and licensing.
-2. Update the exact dependency pin and lockfile together. Do not use a floating branch or modify files inside `node_modules/`.
-3. Run `npm ci`, `npm run check` and the production build. Exercise the shared editor's configuration flow and the server's validation/save path with focused tests.
-4. Update notices and documentation if public behavior, required compatibility or the pinned revision changes.
+1. Obtain a verifiable source commit and review its diff from the recorded snapshot, including configuration, editor events, provider requests, lifecycle cleanup and licensing. Keep using the retained snapshot while no verified replacement is available.
+2. Replace retained files with exact copies from that commit, preserve its license, and update `UPSTREAM.json`, package provenance and the expected revision in package checks. Do not patch the snapshot or files in `node_modules/` ad hoc.
+3. Regenerate the lockfile for the local dependency, run `npm ci`, `npm run check` and the production build. Exercise the shared editor's configuration flow and the server's validation/save path with focused tests.
+4. Update notices and documentation when public behavior, compatibility or the recorded revision changes.
 
-An upstream card release does not automatically release this app. Keep the app's source, dependency pin, lockfile and container image tied to a reviewable commit. Keep the app-directory copies of `LICENSE` and `THIRD_PARTY_NOTICES.md` identical to their root originals so the Docker build includes the same notices.
+A component refresh does not automatically release this app. Keep the snapshot, provenance, lockfile and container image tied to a reviewable app commit. Keep the app-directory copies of `LICENSE` and `THIRD_PARTY_NOTICES.md` identical to their root originals so the Docker build includes the same notices.
 
 ## Documentation images
 

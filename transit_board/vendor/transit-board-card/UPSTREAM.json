@@ -1,0 +1,16 @@
+{
+  "repository": "https://github.com/arminayat/transit-board-card",
+  "commit": "8fec0c7f6058525a91ab31143a41b566fd078a0f",
+  "files": {
+    "src/api.ts": "5154455209e9bf34c36ea5709a7eb0ca5a792f41cec1059d95f4ccfc1fb0a67a",
+    "src/board-view.ts": "2abdc89744c291df7eb1d03a1133af4b8c9a5868ade67108b869bf4383448f92",
+    "src/card.ts": "18344877facbf5d5bfa13db7790c37abdecf02dede3aa8034034212656368699",
+    "src/config.ts": "eb50da14fbc2b714cfd5a07f35c05299937d58bc8a3ac10adac1cf4316062363",
+    "src/departures.ts": "f9a81d3ee6cc8ec54f691f9746f0487efe7ae04f05dd0c7e4d13a22a2cd67bbe",
+    "src/editor.ts": "960d2a0b49527112422a619db01f5bde48e37c014b5dc7023fd6cc97e341a495",
+    "src/index.ts": "2e0066a1be928eb7d00d8255b6049d4735857bbebdfec4eef69fd6005bea6ddc",
+    "src/styles.ts": "42e7bb55f1ed846150854304c744534c52b360c47dc758555e6e06f0d25c7cf6",
+    "src/types.ts": "b319acb922f609f6130bde2d39a245401e491295ab3f8eb63673cf972be626c5",
+    "LICENSE": "4a0437efab45091d2a5f6f6c5b43028af43131160b5403df65783883ec389049"
+  }
+}

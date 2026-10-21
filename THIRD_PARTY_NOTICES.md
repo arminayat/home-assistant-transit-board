@@ -1,10 +1,12 @@
 # Third-party notices
 
-Transit Board is licensed under the [MIT license](LICENSE). It builds on these independently maintained projects and services.
+Transit Board is licensed under the [MIT license](LICENSE). The following component and service attributions apply.
 
 ## Transit Board Card
 
-The build dependency `transit-board-core` supplies the departure-board and visual station-editor components from [arminayat/transit-board-card](https://github.com/arminayat/transit-board-card), pinned to commit [`8fec0c7f6058525a91ab31143a41b566fd078a0f`](https://github.com/arminayat/transit-board-card/tree/8fec0c7f6058525a91ab31143a41b566fd078a0f).
+The local build dependency `transit-board-core` uses an exact MIT-licensed snapshot retained in `vendor/transit-board-card` within the app directory. Its nine source files and original license come from commit `8fec0c7f6058525a91ab31143a41b566fd078a0f` of the original repository, `https://github.com/arminayat/transit-board-card`.
+
+That repository is currently unavailable. Its URL records historical provenance; this app builds from its checked-in snapshot without fetching the original repository. `UPSTREAM.json` records the source commit and SHA-256 hashes of the ten retained source/license files. The package check verifies those hashes and the recorded revision.
 
 Copyright (c) 2026 Armin Ayat. Used under the MIT license:
 

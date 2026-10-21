@@ -3,6 +3,7 @@ ARG NODE_IMAGE=node:24-alpine@sha256:6a1c190e17215d844926b0677f4bf87273ff7d5e54d
 FROM --platform=$BUILDPLATFORM ${NODE_IMAGE} AS build
 WORKDIR /source
 COPY package.json package-lock.json ./
+COPY vendor ./vendor
 RUN npm ci
 COPY . .
 RUN npm run build
