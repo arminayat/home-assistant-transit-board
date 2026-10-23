@@ -50,6 +50,8 @@ const cards = [
     stops: [{ id: 'NSR:StopPlace:100001', name: 'Example station', products: ['rail'], destination: 'Example' }], max_departures: 6 },
   { id: 'smoke-swiss', type: 'custom:transit-board-card', provider: 'transport-ch', title: 'Switzerland sample',
     stops: [{ ...station, products: ['bus'], lines: ['10'], destination: 'Example' }], max_departures: 7 },
+  { id: 'smoke-vag', type: 'custom:transit-board-card', provider: 'vag', title: 'Nürnberg sample',
+    stops: [{ id: '510', name: 'Example station', products: ['suburban', 'subway', 'tram', 'bus'], lines: ['U1'], destination: 'Example' }], max_departures: 5 },
 ];
 if (process.env.SMOKE_PHASE === 'initial') {
   assert.deepEqual(collection, { cards: [] }, 'A clean install must have no default cards or personal stops.');

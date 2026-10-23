@@ -24,7 +24,7 @@ function stop(value: unknown, provider: ProviderId): StopConfig {
   const item = object(value, 'Stop');
   const result: StopConfig = choice(item, 'Stop', provider);
   if (item.direction !== undefined) {
-    if (provider !== 'bvg') throw new Error('Use the destination text filter for Norway and Switzerland.');
+    if (provider !== 'bvg') throw new Error('Use the destination text filter for this region.');
     result.direction = choice(item.direction, 'Direction', provider);
   }
   if (item.destination !== undefined) {

@@ -1,8 +1,8 @@
 # Transit Board
 
-**Departures for Berlin and Brandenburg, Norway and Switzerland in your Home Assistant sidebar.**
+**Departures for Berlin and Brandenburg, the Nürnberg / VAG network, Norway and Switzerland in your Home Assistant sidebar.**
 
-Install the app and add departure cards for the stations and services you want. Give each card its own title, transport modes, lines and direction, with destinations, platforms, delays and cancellations.
+Install the app and add departure cards for the stations and services you want. Give each card its own title, transport modes, lines and direction. Destinations, platforms, delays and cancellations appear where supplied by the provider.
 
 ![Departure-board component showing fictional services at Alexanderplatz](docs/images/board.png)
 
@@ -10,7 +10,7 @@ Install the app and add departure cards for the stations and services you want. 
 
 ## Quick start
 
-Requires a Home Assistant installation with **Supervisor and Apps**, on **amd64** or **aarch64**. The current version is **0.1.0-beta.4**.
+Requires a Home Assistant installation with **Supervisor and Apps**, on **amd64** or **aarch64**. The current version is **0.1.0-beta.5**.
 
 [![Add app repository to Home Assistant](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Farminayat%2Fhome-assistant-transit-board)
 
@@ -26,11 +26,13 @@ No API key, YAML, environment variables or dashboard resource is needed. See [In
 
 ## Make the board yours
 
-Create separate cards for buses, trains or different directions—even at the same station. Each card has its own **Region**, title, stops, filters and departure limit. Choose Berlin & Brandenburg, Norway or Switzerland; cards from different regions can share the same page. Norway and Switzerland support an optional destination-text filter, while Berlin & Brandenburg keeps its direction-station search.
+Create separate cards for buses, trains or different directions—even at the same station. Each card has its own **Region**, title, stops, filters and departure limit. Choose Berlin & Brandenburg, Nürnberg / VAG network, Norway or Switzerland; cards from different regions can share the same page. Nürnberg / VAG network, Norway and Switzerland support an optional destination-text filter, while Berlin & Brandenburg keeps its direction-station search.
+
+Nürnberg / VAG network covers VAG's U-Bahn, tram and bus network, including served nearby cities, plus S-Bahn where supplied by the API. It is not a provider for all of Bavaria or the whole VGN network.
 
 Open a card's **Settings** gear to edit it. One inline editor opens at a time; a successful **Save** applies changes and closes settings, while errors retain your draft. **Cancel** discards the draft. Removing a saved card asks for confirmation, then **Save** applies the removal; **Cancel** restores it.
 
-Everyone who can open the app through Home Assistant shares the household's cards and can edit them. Existing cards keep their settings and default to Berlin & Brandenburg after upgrading. Reload all open app pages before saving.
+Everyone who can open the app through Home Assistant shares the household's cards and can edit them. Existing cards keep their settings and selected regions; older cards without a region default to Berlin & Brandenburg. Reload all open app pages before saving after an upgrade.
 
 <details>
 <summary>See the station settings component</summary>
@@ -41,7 +43,7 @@ Everyone who can open the app through Home Assistant shares the household's card
 
 </details>
 
-Data comes from the public [BVG REST API](https://v6.bvg.transport.rest/), [Entur](https://developer.entur.no/docs/open-services) and [Swiss transport API](https://transport.opendata.ch/). Coverage and realtime information vary by operator. Each viewing browser fetches departures while the board is visible; the app creates no Home Assistant entities or background automations. Read about [regions, filters and privacy](docs/configuration.md).
+Data comes from the public [BVG REST API](https://v6.bvg.transport.rest/), [VAG Nürnberg API](https://opendata.vag.de/dataset/api-echtzeitauskunft) (CC BY 4.0), [Entur](https://developer.entur.no/docs/open-services) and [Swiss transport API](https://transport.opendata.ch/). Coverage and realtime information vary by operator. Each viewing browser fetches departures while the board is visible; the app creates no Home Assistant entities or background automations. Read about [regions, filters and privacy](docs/configuration.md).
 
 ## Documentation
 

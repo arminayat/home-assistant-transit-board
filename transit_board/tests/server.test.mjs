@@ -206,7 +206,7 @@ test("serves only allowlisted assets with security headers and expected content 
     assert.match(response.headers.get("content-type"), new RegExp(type));
     assert.equal(response.headers.get("x-content-type-options"), "nosniff");
     const connect = response.headers.get("content-security-policy").split("; ").find((rule) => rule.startsWith("connect-src"));
-    assert.equal(connect, "connect-src 'self' https://v6.bvg.transport.rest https://api.entur.io https://transport.opendata.ch");
+    assert.equal(connect, "connect-src 'self' https://v6.bvg.transport.rest https://api.entur.io https://transport.opendata.ch https://start.vag.de");
     assert.match(response.headers.get("content-security-policy"), /frame-ancestors 'self'/);
     assert.equal(response.headers.get("referrer-policy"), "no-referrer");
   }
@@ -363,6 +363,7 @@ test("mixed-region settings survive restart and old pages cannot remove provider
   collection.cards.push(
     { id: "norway", ...board("Norway"), provider: "entur", stops: [{ id: "NSR:StopPlace:100001", name: "Example", destination: "Centre" }] },
     { id: "swiss", ...board("Swiss"), provider: "transport-ch", stops: [{ id: "100001", name: "Example", products: ["rail"], destination: "Upper" }] },
+    { id: "nuremberg", ...board("Nürnberg"), provider: "vag", stops: [{ id: "510", name: "Example", products: ["subway"], lines: ["U1"], destination: "Centre" }] },
   );
   const saved = await f.save(collection, current.headers.get("etag"));
   assert.equal(saved.status, 200);

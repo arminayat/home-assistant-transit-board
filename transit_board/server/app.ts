@@ -31,7 +31,7 @@ function securityHeaders(response: ServerResponse): void {
   response.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
   response.setHeader("Content-Security-Policy", [
     "default-src 'none'", "script-src 'self'", "style-src 'self' 'unsafe-inline'",
-    "connect-src 'self' https://v6.bvg.transport.rest https://api.entur.io https://transport.opendata.ch", "img-src 'self' data:",
+    "connect-src 'self' https://v6.bvg.transport.rest https://api.entur.io https://transport.opendata.ch https://start.vag.de", "img-src 'self' data:",
     "font-src 'self'", "base-uri 'none'", "form-action 'none'", "frame-ancestors 'self'",
   ].join("; "));
 }

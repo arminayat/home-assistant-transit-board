@@ -10,7 +10,7 @@ RUN npm run build
 
 FROM ${NODE_IMAGE}
 ARG BUILD_ARCH
-ARG BUILD_VERSION=0.1.0-beta.4
+ARG BUILD_VERSION=0.1.0-beta.5
 ARG BUILD_REVISION=unknown
 ENV NODE_ENV=production
 WORKDIR /app
@@ -22,10 +22,10 @@ LABEL io.hass.type="app" \
       io.hass.arch="${BUILD_ARCH}" \
       io.hass.version="${BUILD_VERSION}" \
       io.hass.name="Transit Board" \
-      io.hass.description="Shared departures for Berlin/Brandenburg, Norway and Switzerland" \
+      io.hass.description="Shared departures for Berlin/Brandenburg, Nürnberg/VAG, Norway and Switzerland" \
       io.hass.url="https://github.com/arminayat/home-assistant-transit-board" \
       org.opencontainers.image.title="Transit Board" \
-      org.opencontainers.image.description="Shared departures for Berlin/Brandenburg, Norway and Switzerland" \
+      org.opencontainers.image.description="Shared departures for Berlin/Brandenburg, Nürnberg/VAG, Norway and Switzerland" \
       org.opencontainers.image.source="https://github.com/arminayat/home-assistant-transit-board" \
       org.opencontainers.image.licenses="MIT" \
       org.opencontainers.image.version="${BUILD_VERSION}" \

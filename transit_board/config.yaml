@@ -1,7 +1,7 @@
 name: Transit Board
-version: "0.1.0-beta.4"
+version: "0.1.0-beta.5"
 slug: transit_board
-description: Shared departures for Berlin/Brandenburg, Norway and Switzerland.
+description: Shared departures for Berlin/Brandenburg, Nürnberg/VAG, Norway and Switzerland.
 url: https://github.com/arminayat/home-assistant-transit-board
 arch:
   - amd64

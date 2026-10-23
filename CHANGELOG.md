@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.0-beta.5
+
+- Add **Nürnberg / VAG network** as a per-card region with station search and departures from VAG's key-free official API, credited under CC BY 4.0.
+- Cover VAG's U-Bahn, tram and bus network, including served nearby cities, plus S-Bahn where supplied by the API. This is regional VAG coverage, not all Bavaria or the whole VGN network.
+- Add the local, case-insensitive **Destination contains** filter and Nürnberg departure clock for VAG cards. The filter matches displayed destinations, not intermediate stops.
+- Preserve existing BVG, Entur and Swiss cards, selected regions, filters and shared Save/Cancel behavior.
+
+Update the app and reload every open Web UI page before saving. No manual migration, API key, new environment variable or native Home Assistant configuration change is required. Back up before updating; rollback requires compatible pre-upgrade app data as well as the older image. Coverage and realtime detail remain source-dependent. Browser and live Home Assistant acceptance remain unverified.
+
 ## 0.1.0-beta.4
 
 - Add a Region selector per card for Berlin & Brandenburg, Norway via Entur and Switzerland via the Swiss transport API, without personal API keys.

@@ -11,14 +11,17 @@ Each card has independent settings. You can use the same station on several card
 | Region | Data source | Departure clock |
 | --- | --- | --- |
 | Berlin & Brandenburg | [BVG REST API](https://v6.bvg.transport.rest/) | Berlin (`Europe/Berlin`) |
+| Nürnberg / VAG network | [VAG Nürnberg API](https://opendata.vag.de/dataset/api-echtzeitauskunft) | Nürnberg (`Europe/Berlin`) |
 | Norway | [Entur](https://developer.entur.no/docs/open-services) | Oslo (`Europe/Oslo`) |
 | Switzerland | [Swiss transport API](https://transport.opendata.ch/) | Zürich (`Europe/Zurich`) |
 
-Choose the region before searching. Station IDs, supported modes and filters belong to that provider; use the selected region's search instead of copying IDs from another source. A card contains stops from one region, while different cards can use different regions. Existing cards default to Berlin & Brandenburg.
+Choose the region before searching. Station IDs, supported modes and filters belong to that provider; use the selected region's search instead of copying IDs from another source. A card contains stops from one region, while different cards can use different regions. Existing regional cards keep their selected region; older cards without a provider default to Berlin & Brandenburg.
+
+Nürnberg / VAG network covers VAG's U-Bahn, tram and bus network, including served nearby cities, plus S-Bahn where supplied by the API. It does not cover all of Bavaria or the whole VGN network. The official public API requires no key, and VAG data is licensed [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
 
 Changing Region on a card with stops asks for confirmation, then clears its stops and their mode, line and direction/destination filters. Its title and maximum departures remain. Cancelling the region change keeps its previous selection. Save applies the changed card; Cancel discards the draft.
 
-Coverage depends on each source's available operators and timetables. A supported region does not guarantee that every service has realtime predictions, platforms or cancellation data. Scheduled departures remain useful when realtime information is absent. The Swiss API's current stationboard schema does not provide explicit cancellation data, so the app does not infer cancelled services.
+Coverage depends on each source's available operators and timetables. A supported region does not guarantee that every service has realtime predictions, platforms or cancellation data. Scheduled departures remain useful when realtime information is absent. The current VAG and Swiss boards do not supply explicit cancellation data, so the app does not infer cancelled services from missing records.
 
 ## Shared settings
 
@@ -36,7 +39,7 @@ Other visible viewers check for saved changes each minute and when their page re
 | Transport modes | All | Optional nonempty selection of transport products for each stop. |
 | Lines | All | Comma-separated provider line names, for example `U5, U8`; matching ignores case and surrounding whitespace. |
 | Direction | All directions | Berlin & Brandenburg: a station along the desired route, selected through search. |
-| Destination contains | Unset | Norway/Switzerland: case-insensitive text contained in the displayed destination, up to 200 characters. |
+| Destination contains | Unset | Nürnberg / VAG network, Norway and Switzerland: case-insensitive text contained in the displayed destination, up to 200 characters. |
 
 The same station on two cards counts as two stop entries toward the shared limit. The interface is in English. Clock times use the card's region, including local daylight saving time, regardless of your viewing device's time zone.
 
@@ -44,11 +47,11 @@ The same station on two cards counts as two stop entries toward the shared limit
 
 Search needs at least two characters. Select a provider result before choosing **Add stop**; typing a name alone does not select one. Similarly named stations may have separate boarding locations, so check the result before saving. Use **Remove** to remove a stop from the board.
 
-Berlin & Brandenburg offers S-Bahn, U-Bahn, tram, bus, ferry, regional and long-distance train. Norway offers Train, Metro / U-Bahn, Tram, Bus, Ferry and Cable car / funicular. Switzerland offers Train, Tram, Bus, Ferry and Cable car / funicular, with no separate metro category in its API. These are filter categories; actual services depend on the selected stop and provider data. Leave all enabled initially, then narrow the selection if needed.
+Berlin & Brandenburg offers S-Bahn, U-Bahn, tram, bus, ferry, regional and long-distance train. Nürnberg / VAG network offers S-Bahn, Metro / U-Bahn, Tram and Bus; S-Bahn is shown where the API supplies it. Norway offers Train, Metro / U-Bahn, Tram, Bus, Ferry and Cable car / funicular. Switzerland offers Train, Tram, Bus, Ferry and Cable car / funicular, with no separate metro category in its API. These are filter categories; actual services depend on the selected stop and provider data. Leave all enabled initially, then narrow the selection if needed.
 
 Line filters are applied locally after results arrive and match provider line names without case sensitivity. For Berlin & Brandenburg, choose **Set direction** with a station along the route; the provider uses its station ID to select departures.
 
-For Norway and Switzerland, **Destination contains (optional)** matches text anywhere in the displayed destination without case sensitivity. It does not mean “via this station” or filter intermediate stops. For example, entering a city name only matches services whose displayed destination contains that name. Clear the filter to include all destinations. Mode filtering follows the selected region's available categories.
+For Nürnberg / VAG network, Norway and Switzerland, **Destination contains (optional)** matches text anywhere in the displayed destination without case sensitivity. It does not mean “via this station” or filter intermediate stops. For example, entering a city name only matches services whose displayed destination contains that name. Clear the filter to include all destinations. Mode filtering follows the selected region's available categories.
 
 If an expected service disappears, clear line and direction filters, check the boarding stop and modes, then reapply filters one at a time. Raise that card's departure limit if its other stops fill it first, or place the services on separate cards.
 
@@ -56,7 +59,7 @@ If an expected service disappears, clear line and direction filters, check the b
 
 Rows include line, destination, boarding stop, optional platform, departure time and countdown. Scheduled time is used when realtime data is absent. Cancellations are marked explicitly and have no live countdown.
 
-For BVG and Entur, requests cover up to 60 minutes and 100 departures per stop. Switzerland requests up to 100 stationboard rows; that source does not guarantee the same 60-minute window. Each card merges duplicate records, sorts by departure time and applies its own limit. Different actual boarding stops remain distinct. Busy stops and local filters can leave fewer displayed rows than requested.
+For BVG, VAG and Entur, the app requests up to 60 minutes and 100 departures per stop. Switzerland requests up to 100 stationboard rows; that source does not guarantee the same 60-minute window. Each card merges duplicate records, sorts by departure time and applies its own limit. Different actual boarding stops remain distinct. Busy stops and local filters can leave fewer displayed rows than requested.
 
 Each visible, attached board refreshes every 60 seconds. Hidden pages pause polling. Identical requests share a page-local cache; separate viewing devices make their own requests. Failed refreshes can retain data for up to five minutes with a stale warning, after which old results expire.
 
@@ -68,6 +71,6 @@ Beta 1's single board is loaded as the first card with ID `legacy`, preserving i
 
 Cards saved by earlier versions without a provider are read as Berlin & Brandenburg, preserving titles, stops and filters. Reading does not rewrite the saved file; an explicit Save stores the current format. Reload old pages before saving, since older write requests are rejected.
 
-Each viewing browser sends searches, selected station IDs, required query parameters and its IP address to the card's source: `v6.bvg.transport.rest`, `api.entur.io` or `transport.opendata.ch`. Line and foreign destination-text filters are local. Entur requests include the app's public `ET-Client-Name` identifier; it is not a personal credential. No personal API keys are required, Home Assistant credentials are not sent to providers, and the app collects no analytics.
+Each viewing browser sends searches, selected station IDs, required query parameters and its IP address to the card's source: `v6.bvg.transport.rest`, `start.vag.de`, `api.entur.io` or `transport.opendata.ch`. VAG uses the public `https://start.vag.de/dm/api/` API. Line and destination-text filters are local. Entur requests include the app's public `ET-Client-Name` identifier; it is not a personal credential. No personal API keys are required, Home Assistant credentials are not sent to providers, and the app collects no analytics.
 
 The app creates no Home Assistant entities, recorder history or background automations. Configuration persistence in app data is separate from the short-lived, in-memory departure cache in each browser.

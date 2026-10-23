@@ -3,7 +3,7 @@ import { PRODUCTS as BVG_PRODUCTS } from 'transit-board-core/src/types.ts';
 
 export const PRODUCTS = [...BVG_PRODUCTS, 'rail', 'cableway'] as const;
 export type Product = (typeof PRODUCTS)[number];
-export type ProviderId = 'bvg' | 'entur' | 'transport-ch';
+export type ProviderId = 'bvg' | 'entur' | 'transport-ch' | 'vag';
 
 export interface StopChoice { id: string; name: string }
 export interface StopConfig extends StopChoice {

@@ -34,7 +34,7 @@ Install updates from the app's Home Assistant page. Back up the app first, read 
 
 **Upgrading from 0.1.0-beta.1:** your existing board becomes the first card, retaining its title, stops and filters. No manual migration or new environment variable is needed. Before the first successful save in the new format, the app preserves the original file as `/data/config.v1.backup.json`, included with app data in backups. Old pages must reload before saving; their previous save format is rejected.
 
-**Upgrading to 0.1.0-beta.4:** existing cards without a region/provider are loaded as Berlin & Brandenburg and keep their settings. Loading leaves the saved file unchanged until an explicit Save. Reload every open app page before editing; older clients cannot write the regional configuration format. Norway and Switzerland require no personal API keys or new environment variables.
+**Upgrading to 0.1.0-beta.5:** existing cards keep their selected regions, stations and filters. Older cards without a region/provider load as Berlin & Brandenburg. Loading leaves the saved file unchanged until an explicit Save. Reload every open app page before editing; older clients cannot write the regional configuration format. The new Nürnberg / VAG network region requires no API key, new environment variable or manual migration.
 
 The beta is published with versioned images for both supported architectures. A repository manifest names the version to install; do not substitute an arbitrary image or development build when following these instructions.
 

@@ -20,7 +20,7 @@ Successful saves close settings and show the updated card. If settings stay open
 
 - If another viewer saved while you were editing, your draft is retained. Choose **Reload saved board**, confirm that you want to discard the draft, then reapply your changes and save again.
 - Keep at least one transport mode for each filtered stop, use whole-number departure limits from 1 to 20, and select stations from search results.
-- Select stations after choosing Region. Unsupported providers and malformed station IDs are rejected, but a numeric ID from another source can still have a valid format and point to the wrong service. Use region search rather than copied IDs. After upgrading to beta 4, reload all open pages before saving, since older write requests are rejected.
+- Select stations after choosing Region. Unsupported providers and malformed station IDs are rejected, but a numeric ID from another source can still have a valid format and point to the wrong service. Use region search rather than copied IDs. After upgrading, reload all open pages before saving, since older write requests are rejected.
 - The collection supports up to 20 cards, 20 stop entries across all cards and a 64 KiB configuration request. Reusing a station on two cards counts as two entries. Reduce unnecessary entries if a limit is reported.
 - If saving reports a storage error, check app logs and available storage. Do not repeatedly uninstall or delete app data to clear the message.
 
@@ -36,7 +36,9 @@ If migration reports the 64 KiB limit, the original file is preserved. Use the p
 
 Choose the correct **Region** first. Station search needs at least two characters. Try a shorter station name, select a result, and then choose **Add stop**. Search covers stops supplied by that region's provider, rather than general addresses or landmarks.
 
-The viewing device connects directly to `v6.bvg.transport.rest` for Berlin & Brandenburg, `api.entur.io` for Norway or `transport.opendata.ch` for Switzerland. Check that device's network, DNS and content blockers if requests fail. Entur needs the app's public client-identification header, which is included automatically; no personal key is needed. Successful app startup does not establish provider connectivity from every device.
+The viewing device connects directly to `v6.bvg.transport.rest` for Berlin & Brandenburg, `start.vag.de` for Nürnberg / VAG network, `api.entur.io` for Norway or `transport.opendata.ch` for Switzerland. Check that device's network, DNS and content blockers if requests fail. Entur needs the app's public client-identification header, which is included automatically; VAG requires no API key. Successful app startup does not establish provider connectivity from every device.
+
+Nürnberg / VAG network covers VAG's U-Bahn, tram and bus services, including served nearby cities, plus S-Bahn where supplied by the API. A stop elsewhere in Bavaria or the VGN network may be outside this API's coverage; use the selected region's search and check VAG's information for that service.
 
 Provider outages and rate limits are retried automatically. A 429 response means the service is busy; respect the pause instead of repeatedly reloading. Failure backoff reaches five minutes, while a provider `Retry-After` value can require a longer wait.
 
@@ -44,17 +46,17 @@ Provider outages and rate limits are retried automatically. A 429 response means
 
 On a new installation, use **+ Add card** to create the first card. For an empty card, open its **Settings** gear and confirm that a stop is saved. Then clear line and direction filters and include the relevant transport modes. Verify the boarding stop, because similarly named stops may represent different locations.
 
-For Berlin & Brandenburg, a direction is a station along the desired route. For Norway and Switzerland, **Destination contains** matches the displayed destination text without case sensitivity, not intermediate stops or a station ID. Clear the direction/destination filter to include both ways. Line names match provider results case-insensitively. Add filters back one at a time to identify the restrictive one.
+For Berlin & Brandenburg, a direction is a station along the desired route. For Nürnberg / VAG network, Norway and Switzerland, **Destination contains** matches the displayed destination text without case sensitivity, not intermediate stops or a station ID. Clear the direction/destination filter to include both ways. Line names match provider results case-insensitively. Add filters back one at a time to identify the restrictive one.
 
-BVG and Entur request up to 60 minutes and 100 results per stop. Switzerland requests up to 100 stationboard rows, without guaranteeing the same time window. Busy stops and local filters may leave fewer rows than the configured maximum. An empty card is not proof that no service exists. Each card's departure limit applies to the stops on that card.
+BVG, VAG and Entur request up to 60 minutes and 100 results per stop. Switzerland requests up to 100 stationboard rows, without guaranteeing the same time window. Busy stops and local filters may leave fewer rows than the configured maximum. An empty card is not proof that no service exists. Each card's departure limit applies to the stops on that card.
 
 ## Data is stale, scheduled or incomplete
 
 The board refreshes every minute while visible. A hidden tab or suspended mobile app does not keep polling. Return to the page to resume updates.
 
-Failed refreshes can retain successful results for up to five minutes with a warning. Older results expire. “Scheduled” means no realtime information is available; missing platforms mean the provider did not supply one. Cancellations are marked when explicitly reported. The Swiss stationboard currently supplies no explicit cancellation field, so absence from the board is not interpreted as a cancellation.
+Failed refreshes can retain successful results for up to five minutes with a warning. Older results expire. “Scheduled” means no realtime information is available; missing platforms mean the provider did not supply one. Cancellations are marked when explicitly reported. The current VAG and Swiss boards supply no explicit cancellation data, so absence from the board is not interpreted as a cancellation.
 
-Clock times use the card's region: Berlin, Oslo or Zürich. Countdowns also depend on your device's clock being correct. Check operator information before travelling, particularly during disruption.
+Clock times use the card's region: Berlin, Nürnberg, Oslo or Zürich. Countdowns also depend on your device's clock being correct. Check operator information before travelling, particularly during disruption.
 
 ## Report a problem
 

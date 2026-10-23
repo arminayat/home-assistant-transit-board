@@ -20,23 +20,25 @@ Create up to 20 cards with 20 stop entries across the collection. The same stati
 
 ## Regions and filters
 
-Choose **Berlin & Brandenburg** (BVG REST), **Norway** (Entur) or **Switzerland** (Swiss transport API) independently for each card. Departure clock times use Berlin, Oslo or Zürich respectively. A supported region does not guarantee realtime information or full coverage of every operator.
+Choose **Berlin & Brandenburg** (BVG REST), **Nürnberg / VAG network** (VAG), **Norway** (Entur) or **Switzerland** (Swiss transport API) independently for each card. Departure clock times use Berlin, Nürnberg, Oslo or Zürich respectively. A supported region does not guarantee realtime information or full coverage of every operator.
 
-Berlin & Brandenburg keeps station-search direction filters. For Norway and Switzerland, **Destination contains (optional)** matches the displayed destination text without case sensitivity; it does not select services via an intermediate station. Norway offers train, metro, tram, bus, ferry and cable car/funicular filters. Switzerland offers the same categories except a separate metro category, which its API does not provide.
+Berlin & Brandenburg keeps station-search direction filters. For Nürnberg / VAG network, Norway and Switzerland, **Destination contains (optional)** matches the displayed destination text without case sensitivity; it does not select services via an intermediate station. Norway offers train, metro, tram, bus, ferry and cable car/funicular filters. Switzerland offers the same categories except a separate metro category, which its API does not provide.
+
+Nürnberg / VAG network covers VAG's U-Bahn, tram and bus network, including served nearby cities, plus S-Bahn where supplied by the API. It does not cover all of Bavaria or the whole VGN network. Its [official public API](https://opendata.vag.de/dataset/api-echtzeitauskunft) requires no key and supplies data under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
 
 Choose Region before searching for stops. Changing a card with stops to another region asks for confirmation and clears its stop selections and filters while retaining its title and departure limit. Save applies the change; Cancel discards it.
 
-## Upgrade to beta 4
+## Upgrade to beta 5
 
-Reload every open Web UI page before saving after an update to **0.1.0-beta.4**. Older write requests are rejected. Existing cards without a provider load as Berlin & Brandenburg with their settings preserved; the file is not rewritten until you explicitly save. No manual migration, personal API key or new environment variable is needed.
+Reload every open Web UI page before saving after an update to **0.1.0-beta.5**. Older write requests are rejected. Existing cards retain their selected regions and settings. Cards without a provider load as Berlin & Brandenburg with their settings preserved; the file is not rewritten until you explicitly save. No manual migration, personal API key or new environment variable is needed.
 
 For beta 1 data, your previous board becomes the first card. The original file stays untouched on load and is copied to `/data/config.v1.backup.json` before the first successful new-format save.
 
 ## Data and privacy
 
-Each visible browser refreshes departures from the card's [BVG REST](https://v6.bvg.transport.rest/), [Entur](https://developer.entur.no/docs/open-services) or [Swiss transport API](https://transport.opendata.ch/) source every 60 seconds. Hidden pages pause polling. Realtime estimates, platforms and cancellation information depend on the source; the current Swiss stationboard does not report explicit cancellations. Old results expire after five minutes during failures.
+Each visible browser refreshes departures from the card's [BVG REST](https://v6.bvg.transport.rest/), [VAG](https://opendata.vag.de/dataset/api-echtzeitauskunft), [Entur](https://developer.entur.no/docs/open-services) or [Swiss transport API](https://transport.opendata.ch/) source every 60 seconds. Hidden pages pause polling. Realtime estimates, platforms and cancellation information depend on the source. The current VAG and Swiss boards do not supply explicit cancellation data; the app does not infer cancellations from missing services. Old results expire after five minutes during failures.
 
-Browsers send station searches, IDs, required query parameters and their IP address to the provider. Line filters and foreign destination-text filters stay local. Entur requests carry the app's public `ET-Client-Name` identifier. No personal API key or Home Assistant credentials are sent. The app creates no entities, recorder history or background automations.
+Browsers send station searches, IDs, required query parameters and their IP address to the provider. VAG requests go to `https://start.vag.de/dm/api/`. Line and destination-text filters stay local. Entur requests carry the app's public `ET-Client-Name` identifier. No personal API key or Home Assistant credentials are sent. The app creates no entities, recorder history or background automations.
 
 ## Backups and recovery
 

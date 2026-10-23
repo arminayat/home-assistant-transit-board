@@ -99,13 +99,15 @@ test("mixed-region cards retain independent stations, modes and destination filt
     card("berlin", { stops: [{ ...stop, direction: { id: "100002", name: "Example direction" } }] }),
     card("norway", { provider: "entur", stops: [{ id: "NSR:StopPlace:100001", name: "Example", products: ["rail"], destination: " Centre " }] }),
     card("swiss", { provider: "transport-ch", stops: [{ ...stop, products: ["cableway"], lines: [" 10 "], destination: " Upper " }] }),
+    card("nuremberg", { provider: "vag", stops: [{ id: "510", name: "Example", products: ["suburban", "subway", "tram", "bus"], lines: [" u1 "], destination: " Centre " }] }),
   ] };
   const normalized = normalizeAppConfig(value);
-  assert.deepEqual(normalized.cards.map((item) => item.provider), ["bvg", "entur", "transport-ch"]);
+  assert.deepEqual(normalized.cards.map((item) => item.provider), ["bvg", "entur", "transport-ch", "vag"]);
   assert.equal(normalized.cards[1].stops[0].destination, "Centre");
   assert.equal(normalized.cards[2].stops[0].destination, "Upper");
   assert.deepEqual(normalized.cards[2].stops[0].lines, ["10"]);
   assert.equal(normalized.cards[0].stops[0].direction.id, "100002");
+  assert.deepEqual(normalized.cards[3].stops[0], { id: "510", name: "Example", products: ["suburban", "subway", "tram", "bus"], lines: ["U1"], destination: "Centre" });
 });
 
 test("unsupported regions, station ID formats and region-incompatible filters are rejected", () => {
@@ -123,5 +125,10 @@ test("unsupported regions, station ID formats and region-incompatible filters ar
     ["transport-ch", { ...stop, direction: stop }],
     ["bvg", { ...stop, destination: "Wrong filter" }],
     ["transport-ch", { ...stop, destination: "x".repeat(201) }],
+    ["vag", { ...stop, id: "NSR:StopPlace:510" }],
+    ["vag", { ...stop, id: "510/../../" }],
+    ["vag", { ...stop, products: ["rail"] }],
+    ["vag", { ...stop, direction: stop }],
+    ["vag", { ...stop, destination: "x".repeat(201) }],
   ]) assert.throws(() => normalizeAppConfig({ cards: [card("a", { provider, stops: [entry] })] }));
 });

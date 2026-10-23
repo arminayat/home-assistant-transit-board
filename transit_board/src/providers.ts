@@ -26,6 +26,11 @@ export const PROVIDERS: Readonly<Record<ProviderId, ProviderInfo>> = {
     products: ['rail', 'tram', 'bus', 'ferry', 'cableway'],
     sourceLabel: 'Transport API · opentransportdata.swiss', sourceUrl: 'https://transport.opendata.ch/',
   },
+  vag: {
+    label: 'Nürnberg / VAG network', timeZone: 'Europe/Berlin', timeLabel: 'Nürnberg',
+    products: ['suburban', 'subway', 'tram', 'bus'],
+    sourceLabel: 'VAG Nürnberg · CC BY 4.0', sourceUrl: 'https://opendata.vag.de/dataset/api-echtzeitauskunft',
+  },
 };
 
 export const PRODUCT_LABELS: Readonly<Record<Product, string>> = {
@@ -36,7 +41,7 @@ export const PRODUCT_LABELS: Readonly<Record<Product, string>> = {
 export function normalizeProvider(value: unknown): ProviderId {
   if (value === undefined) return 'bvg';
   if (typeof value !== 'string' || !Object.hasOwn(PROVIDERS, value)) {
-    throw new Error('Choose a supported region: Berlin & Brandenburg, Norway or Switzerland.');
+    throw new Error('Choose a supported region from the Region list.');
   }
   return value as ProviderId;
 }

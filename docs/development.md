@@ -22,7 +22,7 @@ Development serves `http://127.0.0.1:8099` and stores settings in ignored `.dev-
 
 ## Ownership and invariants
 
-The server owns access through Ingress, shared configuration validation, conditional saves and persistence. It stores `AppConfig` as `{ cards: [...] }` in `/data/config.json`, with each card containing a unique `id`, a `provider` (`bvg`, `entur` or `transport-ch`) and its board settings. Limits are 20 cards, 20 aggregate stop entries and 64 KiB. Writes are atomic; malformed data is preserved for recovery.
+The server owns access through Ingress, shared configuration validation, conditional saves and persistence. It stores `AppConfig` as `{ cards: [...] }` in `/data/config.json`, with each card containing a unique `id`, a `provider` (`bvg`, `vag`, `entur` or `transport-ch`) and its board settings. Limits are 20 cards, 20 aggregate stop entries and 64 KiB. Writes are atomic; malformed data is preserved for recovery.
 
 The frontend owns loading the collection, adding/removing cards, one inline editor at a time, local drafts and save conflicts. App-owned card, editor, board-view and departure modules adapt the original MIT components, with local types/configuration and provider metadata. They own regional search, normalized data, filters and local-clock rendering. The retained snapshot's BVG API and styles are reused unchanged.
 
@@ -32,9 +32,11 @@ Prevent conflicting edits from overwriting another user's saved settings. Preser
 
 Missing storage returns `{ cards: [] }`. A legacy single-board file is loaded as one card with ID `legacy`, without rewriting it. Preserve an exact original copy at `config.v1.backup.json` before the first successful new-format save. GET and PUT use the collection shape; reject legacy PUT payloads so an older open page cannot replace the collection.
 
-Older stored cards without `provider` migrate on read to `bvg` without rewriting the source until explicit Save. API writes require `X-Transit-Board: 2`, the current regional shape, supported provider IDs, valid station-ID formats/modes, and the existing ETag precondition. Norwegian IDs use `NSR:StopPlace:`; BVG and Swiss IDs are numeric, so syntax cannot prove which numeric source an ID came from. Region changes reset stops to prevent reuse in the UI. Reject older clients rather than accepting writes that lose regional settings. Rollback to an older image requires compatible pre-upgrade data.
+Older stored cards without `provider` migrate on read to `bvg` without rewriting the source until explicit Save. API writes require `X-Transit-Board: 2`, the current regional shape, supported provider IDs, valid station-ID formats/modes, and the existing ETag precondition. Norwegian IDs use `NSR:StopPlace:`; BVG, VAG and Swiss IDs are numeric, so syntax cannot prove which numeric source an ID came from. Region changes reset stops to prevent reuse in the UI. Reject older clients rather than accepting writes that lose regional settings. Rollback to an older image requires compatible pre-upgrade data.
 
-Provider adapters use fixed origins: BVG at `https://v6.bvg.transport.rest`, Entur at `https://api.entur.io` and Switzerland at `https://transport.opendata.ch`. Entur uses `/geocoder/v3/autocomplete` and `/journey-planner/v3/graphql` with a public `ET-Client-Name`; the Swiss API uses `/v1`. Browser requests omit credentials. Foreign destination filtering is a local, case-insensitive match on displayed destination text, not a via-station filter. Keep provider-specific response limits, realtime availability and time zones explicit in tests.
+Provider adapters use fixed origins: BVG at `https://v6.bvg.transport.rest`, VAG at `https://start.vag.de`, Entur at `https://api.entur.io` and Switzerland at `https://transport.opendata.ch`. VAG uses `/dm/api/` without an API key and is scoped to Nürnberg's VAG network, including served nearby cities. Entur uses `/geocoder/v3/autocomplete` and `/journey-planner/v3/graphql` with a public `ET-Client-Name`; the Swiss API uses `/v1`. Browser requests omit credentials. Destination-text filtering for VAG, Entur and Switzerland is a local, case-insensitive match on displayed destinations, not a via-station filter. Keep provider-specific response limits, realtime availability and time zones explicit in tests.
+
+VAG station search and departure requests use `/dm/api/v1/haltestellen/VGN` and `/dm/api/v1/abfahrten/VGN/{id}`. Departures request `timespan=60` and `limitcount=100` and retain at most 100 valid rows. Treat `AbfahrtszeitIst` as realtime only when `Prognose` is true and the timestamp is valid; otherwise use `AbfahrtszeitSoll` as scheduled. The departure monitor has no documented cancellation field. Keep this distinction from `FaelltAus` on the separate trip API, which this app does not use.
 
 ## Updating the shared components
 
@@ -64,7 +66,7 @@ Use fabricated data and public central station examples when adding fixtures or 
 Prepare a release on `armin/release`, keeping the app manifest, package version and changelogs aligned. Commit the reviewed source and lockfile, run local checks, and push the branch before its version tag. For this beta, from the repository root:
 
 ```sh
-app_version=0.1.0-beta.4
+app_version=0.1.0-beta.5
 git switch armin/release
 git push origin armin/release
 git tag "v$app_version"

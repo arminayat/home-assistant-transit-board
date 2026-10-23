@@ -36,6 +36,8 @@ The documentation images demonstrate these shared components with sample data. T
 
 Berlin & Brandenburg uses the public [BVG REST API](https://v6.bvg.transport.rest/), built on [HAFAS client](https://github.com/public-transport/hafas-client). Coverage and realtime information depend on upstream BVG/VBB data.
 
+Nürnberg / VAG network uses [VAG Verkehrs-Aktiengesellschaft Nürnberg's public realtime API](https://opendata.vag.de/dataset/api-echtzeitauskunft) at `https://start.vag.de/dm/api/`, without an API key. Data is provided by VAG Nürnberg under [Creative Commons Attribution 4.0 International (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/). The app normalizes and filters the supplied data for display. Coverage is VAG's U-Bahn, tram and bus network, including served nearby cities, plus S-Bahn where supplied by the API; it does not establish coverage of all Bavaria or the whole VGN network. The current VAG departure board supplies no explicit cancellation data.
+
 Norway uses [Entur's public APIs](https://developer.entur.no/docs/open-services), including the current geocoder and Journey Planner. Requests include the app's public `ET-Client-Name` identification header, rather than a personal API key. Data availability and use conditions are described by Entur.
 
 Switzerland uses the community [Swiss transport API](https://transport.opendata.ch/), with source credit to [opentransportdata.swiss](https://opentransportdata.swiss/en/). Timetable, platform and realtime information depend on its available upstream data; the current stationboard does not report explicit cancellations.

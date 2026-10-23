@@ -1,7 +1,7 @@
 {
   "name": "home-assistant-transit-board",
-  "version": "0.1.0-beta.4",
-  "description": "Shared Home Assistant departures for Berlin/Brandenburg, Norway and Switzerland",
+  "version": "0.1.0-beta.5",
+  "description": "Shared Home Assistant departures for Berlin/Brandenburg, Nürnberg/VAG, Norway and Switzerland",
   "type": "module",
   "private": true,
   "license": "MIT",

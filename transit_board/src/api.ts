@@ -2,6 +2,7 @@ import { fetchDepartures as bvgDepartures, searchStops as bvgStops, TransitApiEr
 import type { StopConfig as BvgStopConfig } from 'transit-board-core/src/types.ts';
 import { searchEnturStops, fetchEnturDepartures } from './entur.ts';
 import { searchSwissStops, fetchSwissDepartures } from './switzerland.ts';
+import { searchVagStops, fetchVagDepartures } from './vag.ts';
 import type { DepartureResult, ProviderId, StopChoice, StopConfig } from './types.ts';
 
 export { TransitApiError };
@@ -11,6 +12,7 @@ export function searchStops(provider: ProviderId, query: string, signal?: AbortS
     case 'bvg': return bvgStops(query, signal);
     case 'entur': return searchEnturStops(query, signal);
     case 'transport-ch': return searchSwissStops(query, signal);
+    case 'vag': return searchVagStops(query, signal);
     default: return Promise.reject(new TransitApiError('Choose a supported transit region.'));
   }
 }
@@ -21,6 +23,7 @@ export async function fetchDepartures(provider: ProviderId, stop: StopConfig): P
   switch (provider) {
     case 'entur': result = await fetchEnturDepartures(stop); break;
     case 'transport-ch': result = await fetchSwissDepartures(stop); break;
+    case 'vag': result = await fetchVagDepartures(stop); break;
     default: throw new TransitApiError('Choose a supported transit region.');
   }
   const lines = stop.lines?.map((line) => line.trim().toLowerCase()).filter(Boolean);

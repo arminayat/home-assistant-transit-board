@@ -1,4 +1,4 @@
-// Shared request ownership for the two App-owned providers; no persistent browser state.
+// Shared requests for App-owned providers; no persistent browser state.
 import { TransitApiError } from 'transit-board-core/src/api.ts';
 import type { ProviderId } from './types.ts';
 
