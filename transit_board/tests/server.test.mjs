@@ -14,9 +14,9 @@ const compiled = await build({
 });
 const { createAppServer } = await import(`data:text/javascript;base64,${Buffer.from(compiled.outputFiles[0].contents).toString("base64")}`);
 const empty = { cards: [] };
-const board = (title) => ({ type: "custom:transit-board-card", title, stops: [{ id: "100001", name: "Example station" }], max_departures: 5 });
+const board = (title) => ({ type: "custom:transit-board-card", provider: "bvg", title, stops: [{ id: "100001", name: "Example station" }], max_departures: 5 });
 const config = (title) => ({ cards: [{ id: "first", ...board(title) }] });
-const headers = (etag) => ({ "Content-Type": "application/json", "X-Transit-Board": "1", ...(etag ? { "If-Match": etag } : {}) });
+const headers = (etag) => ({ "Content-Type": "application/json", "X-Transit-Board": "2", ...(etag ? { "If-Match": etag } : {}) });
 
 async function fixture(t, { development = true, stored, peer, directoryInsteadOfConfig = false } = {}) {
   const root = await mkdtemp(join(tmpdir(), "transit-board-test-"));
@@ -205,7 +205,8 @@ test("serves only allowlisted assets with security headers and expected content 
     assert.equal(response.status, 200);
     assert.match(response.headers.get("content-type"), new RegExp(type));
     assert.equal(response.headers.get("x-content-type-options"), "nosniff");
-    assert.match(response.headers.get("content-security-policy"), /connect-src 'self' https:\/\/v6\.bvg\.transport\.rest/);
+    const connect = response.headers.get("content-security-policy").split("; ").find((rule) => rule.startsWith("connect-src"));
+    assert.equal(connect, "connect-src 'self' https://v6.bvg.transport.rest https://api.entur.io https://transport.opendata.ch");
     assert.match(response.headers.get("content-security-policy"), /frame-ancestors 'self'/);
     assert.equal(response.headers.get("referrer-policy"), "no-referrer");
   }
@@ -349,6 +350,40 @@ test("an oversized migrated legacy document is preserved with actionable recover
   assert.match((await response.json()).error, /migration limit.*previous App version.*smaller backup/);
   assert.equal(await readFile(join(f.dataDir, "config.json"), "utf8"), original);
   assert.deepEqual(await readdir(f.dataDir), ["config.json"]);
+});
+
+test("mixed-region settings survive restart and old pages cannot remove provider metadata", async (t) => {
+  const { provider: _provider, ...oldBoard } = board("Existing title");
+  const original = JSON.stringify({ cards: [{ id: "existing", ...oldBoard }] }, null, 2);
+  const f = await fixture(t, { stored: original });
+  const current = await f.read();
+  const collection = await current.json();
+  assert.equal(collection.cards[0].provider, "bvg");
+  assert.equal(await readFile(join(f.dataDir, "config.json"), "utf8"), original, "Reading must not rewrite previous settings.");
+  collection.cards.push(
+    { id: "norway", ...board("Norway"), provider: "entur", stops: [{ id: "NSR:StopPlace:100001", name: "Example", destination: "Centre" }] },
+    { id: "swiss", ...board("Swiss"), provider: "transport-ch", stops: [{ id: "100001", name: "Example", products: ["rail"], destination: "Upper" }] },
+  );
+  const saved = await f.save(collection, current.headers.get("etag"));
+  assert.equal(saved.status, 200);
+  const etag = saved.headers.get("etag");
+  for (const stale of [{ cards: [] }, { cards: [{ id: "existing", ...oldBoard }] }]) {
+    const rejected = await f.save(stale, etag, { "X-Transit-Board": "1" });
+    assert.equal(rejected.status, 400);
+    assert.match((await rejected.json()).error, /Reload Transit Board.*region-specific/);
+  }
+  assert.deepEqual(await (await f.read()).json(), collection);
+  const restarted = createAppServer({ dataDir: f.dataDir, staticDir: f.staticDir, development: true });
+  restarted.listen(0, "127.0.0.1");
+  await once(restarted, "listening");
+  try {
+    const response = await fetch(`http://127.0.0.1:${restarted.address().port}/api/config`);
+    assert.equal(response.headers.get("etag"), etag);
+    assert.deepEqual(await response.json(), collection);
+  } finally {
+    restarted.closeAllConnections();
+    await new Promise((resolve) => restarted.close(resolve));
+  }
 });
 
 test("the development CLI saves under its working directory and shuts down on SIGTERM", async (t) => {

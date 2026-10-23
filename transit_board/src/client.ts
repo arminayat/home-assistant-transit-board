@@ -37,5 +37,5 @@ export function loadConfig(): Promise<Snapshot> { return request(); }
 
 export function saveConfig(config: AppConfig, etag: string): Promise<Snapshot> {
   return request({ method: 'PUT', headers: { 'Content-Type': 'application/json',
-    'X-Transit-Board': '1', 'If-Match': etag }, body: JSON.stringify(normalizeAppConfig(config)) });
+    'X-Transit-Board': '2', 'If-Match': etag }, body: JSON.stringify(normalizeAppConfig(config)) });
 }

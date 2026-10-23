@@ -31,7 +31,7 @@ function securityHeaders(response: ServerResponse): void {
   response.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
   response.setHeader("Content-Security-Policy", [
     "default-src 'none'", "script-src 'self'", "style-src 'self' 'unsafe-inline'",
-    "connect-src 'self' https://v6.bvg.transport.rest", "img-src 'self' data:",
+    "connect-src 'self' https://v6.bvg.transport.rest https://api.entur.io https://transport.opendata.ch", "img-src 'self' data:",
     "font-src 'self'", "base-uri 'none'", "form-action 'none'", "frame-ancestors 'self'",
   ].join("; "));
 }
@@ -99,7 +99,10 @@ export function createAppServer(options: AppServerOptions): Server {
         response.setHeader("Allow", "GET, PUT");
         throw new HttpError(405, "Use GET to read or PUT to save the shared board.");
       }
-      if (request.headers["x-transit-board"] !== "1") {
+      if (request.headers["x-transit-board"] === "1") {
+        throw new HttpError(400, "Reload Transit Board before saving. This page does not support region-specific card settings.");
+      }
+      if (request.headers["x-transit-board"] !== "2") {
         throw new HttpError(403, "The configuration request is missing its same-origin header.");
       }
       if (request.headers["content-type"]?.split(";")[0].trim().toLowerCase() !== "application/json") {

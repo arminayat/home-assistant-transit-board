@@ -7,7 +7,7 @@ const html = await readFile('dist/public/index.html', 'utf8');
 const code = await readFile('dist/public/app.js', 'utf8');
 const flush = async () => { for (let i = 0; i < 3; i++) await new Promise((resolve) => setTimeout(resolve, 0)); };
 const clone = (value) => JSON.parse(JSON.stringify(value));
-const card = (id, title) => ({ id, type: 'custom:transit-board-card', title,
+const card = (id, title) => ({ id, type: 'custom:transit-board-card', provider: 'bvg', title,
   stops: [{ id: '101', name: 'Example Square' }], max_departures: 5 });
 
 async function mount(initial = { cards: [] }, url = 'https://example.invalid/api/hassio_ingress/sample/') {

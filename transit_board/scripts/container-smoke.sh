@@ -44,8 +44,12 @@ const collection = await response.json();
 assert.ok(Array.isArray(collection.cards));
 const station = { id: '100001', name: 'Example station' };
 const cards = [
-  { id: 'smoke-buses', type: 'custom:transit-board-card', title: 'Smoke buses', stops: [station], max_departures: 5 },
-  { id: 'smoke-trains', type: 'custom:transit-board-card', title: 'Smoke trains', stops: [station], max_departures: 5 },
+  { id: 'smoke-buses', type: 'custom:transit-board-card', provider: 'bvg', title: 'Smoke buses', stops: [station], max_departures: 5 },
+  { id: 'smoke-trains', type: 'custom:transit-board-card', provider: 'bvg', title: 'Smoke trains', stops: [station], max_departures: 5 },
+  { id: 'smoke-norway', type: 'custom:transit-board-card', provider: 'entur', title: 'Norway sample',
+    stops: [{ id: 'NSR:StopPlace:100001', name: 'Example station', products: ['rail'], destination: 'Example' }], max_departures: 6 },
+  { id: 'smoke-swiss', type: 'custom:transit-board-card', provider: 'transport-ch', title: 'Switzerland sample',
+    stops: [{ ...station, products: ['bus'], lines: ['10'], destination: 'Example' }], max_departures: 7 },
 ];
 if (process.env.SMOKE_PHASE === 'initial') {
   assert.deepEqual(collection, { cards: [] }, 'A clean install must have no default cards or personal stops.');
@@ -64,14 +68,14 @@ if (process.env.SMOKE_PHASE === 'initial') {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
-      'X-Transit-Board': '1',
+      'X-Transit-Board': '2',
       'If-Match': response.headers.get('ETag'),
     },
     body: JSON.stringify({ cards }),
   });
   assert.equal(saved.status, 200, `Configuration write failed: ${await saved.text()}`);
 } else {
-  assert.deepEqual(collection, { cards }, 'Both distinct cards and their shared station must survive a container restart.');
+  assert.deepEqual(collection, { cards }, 'Mixed-region cards and the repeated station must survive a container restart.');
 }
 console.log(`Ingress ${process.env.SMOKE_PHASE} checks passed.`);
 JS

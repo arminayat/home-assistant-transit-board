@@ -8,6 +8,8 @@ The local build dependency `transit-board-core` uses an exact MIT-licensed snaps
 
 That repository is currently unavailable. Its URL records historical provenance; this app builds from its checked-in snapshot without fetching the original repository. `UPSTREAM.json` records the source commit and SHA-256 hashes of the ten retained source/license files. The package check verifies those hashes and the recorded revision.
 
+The retained snapshot remains byte-for-byte unchanged. Provider-aware card, configuration, editor, board-view and departure logic are adapted in app-owned `src/` modules with MIT attribution. The app continues to reuse the snapshot's unchanged BVG API and styles. The copyright and permission notice below applies to the retained source and these adaptations.
+
 Copyright (c) 2026 Armin Ayat. Used under the MIT license:
 
 > Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -30,9 +32,15 @@ Copyright (c) 2026 Armin Ayat. Used under the MIT license:
 
 The documentation images demonstrate these shared components with sample data. They are not proof of installation or acceptance inside Home Assistant.
 
-## Public transit service
+## Public transit services
 
-Departure information and station search use the public [BVG REST API](https://v6.bvg.transport.rest/), built on [HAFAS client](https://github.com/public-transport/hafas-client). Coverage and realtime information depend on upstream BVG/VBB data. Transit Board is independent of these operators and of Home Assistant.
+Berlin & Brandenburg uses the public [BVG REST API](https://v6.bvg.transport.rest/), built on [HAFAS client](https://github.com/public-transport/hafas-client). Coverage and realtime information depend on upstream BVG/VBB data.
+
+Norway uses [Entur's public APIs](https://developer.entur.no/docs/open-services), including the current geocoder and Journey Planner. Requests include the app's public `ET-Client-Name` identification header, rather than a personal API key. Data availability and use conditions are described by Entur.
+
+Switzerland uses the community [Swiss transport API](https://transport.opendata.ch/), with source credit to [opentransportdata.swiss](https://opentransportdata.swiss/en/). Timetable, platform and realtime information depend on its available upstream data; the current stationboard does not report explicit cancellations.
+
+Provider documentation and its data-use conditions remain authoritative. The app does not guarantee every operator or realtime feature in a supported region. Transit Board is independent of these services, transport operators and Home Assistant.
 
 ## Build and runtime tools
 

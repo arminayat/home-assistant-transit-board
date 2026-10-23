@@ -2,7 +2,7 @@
 const styles = `
   :host { font: inherit; }
   .editor { grid-template-columns: minmax(0, 1fr) minmax(150px, .4fr); gap: 24px 20px; padding: 0; }
-  .editor > .search, .stops { grid-column: 1 / -1; }
+  .editor > .region, .editor > .search, .stops { grid-column: 1 / -1; }
   label { min-width: 0; gap: 8px; font-size: .875rem; font-weight: 600; line-height: 1.5; }
   input:not([type=checkbox]), select {
     min-height: 46px; padding: 11px 13px; border-radius: 10px;

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { BoardSession } from '../dist/session.js';
 
-const config = (title = 'Home') => ({ cards: [{ id: 'first', type: 'custom:transit-board-card', title, stops: [], max_departures: 5 }] });
+const config = (title = 'Home') => ({ cards: [{ id: 'first', type: 'custom:transit-board-card', provider: 'bvg', title, stops: [], max_departures: 5 }] });
 const snapshot = (title = 'Home', etag = '"1"') => ({ config: config(title), etag });
 function deferred() { let resolve; let reject; const promise = new Promise((a, b) => { resolve = a; reject = b; }); return { promise, resolve, reject }; }
 const session = (read, write) => new BoardSession(() => {}, read, write);

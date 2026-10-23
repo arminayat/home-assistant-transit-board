@@ -1,7 +1,7 @@
-import { normalizeConfig } from "transit-board-core/src/config.ts";
-import type { BoardConfig } from "transit-board-core/src/types.ts";
+import { normalizeConfig } from "./card-config.ts";
+import type { BoardConfig } from "./types.ts";
 
-export type { BoardConfig } from "transit-board-core/src/types.ts";
+export type { BoardConfig } from "./types.ts";
 export const MAX_BODY_BYTES = 64 * 1024;
 export const MAX_STOPS = 20;
 export const MAX_CARDS = 20;

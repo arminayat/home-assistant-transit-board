@@ -20,6 +20,7 @@ See [Development](docs/development.md) for the architecture, commands and verifi
 
 - Keep files below 500 lines. Extend the layer that owns the behavior and avoid speculative settings or services.
 - Preserve Ingress access checks, input validation, response size limits, atomic writes and protection against conflicting saves.
+- Keep provider IDs, transport modes, time zones and destination/direction semantics separate. Preserve missing-provider disk migration to BVG and rejection of older write clients.
 - Treat the card collection as shared configuration. Preserve legacy-file migration and its original backup. Do not add per-user behavior without first discussing its effect on the product and storage model.
 - Render external labels as text and keep credentials, private Home Assistant settings and personal travel information out of fixtures and screenshots.
 - Add focused behavioral coverage for changed behavior, including failure paths. Mock provider requests in automated tests.

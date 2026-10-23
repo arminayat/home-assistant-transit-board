@@ -8,7 +8,7 @@ const compiled = await build({
 });
 const { DEFAULT_APP_CONFIG, MAX_BODY_BYTES, MAX_CARDS, MAX_STOPS, normalizeAppConfig, migrateSavedConfig } =
   await import(`data:text/javascript;base64,${Buffer.from(compiled.outputFiles[0].contents).toString("base64")}`);
-const board = { type: "custom:transit-board-card", stops: [], max_departures: 5 };
+const board = { type: "custom:transit-board-card", provider: "bvg", stops: [], max_departures: 5 };
 const stop = { id: "100001", name: "Example station" };
 const card = (id, overrides = {}) => ({ id, ...board, ...overrides });
 
@@ -83,4 +83,45 @@ test("a legacy document that outgrows the migration limit has explicit recovery 
   const legacy = { ...board, title: "x".repeat(MAX_BODY_BYTES - overhead) };
   assert.equal(Buffer.byteLength(JSON.stringify(legacy)), MAX_BODY_BYTES);
   assert.throws(() => migrateSavedConfig(legacy), /migration limit.*previous App version.*smaller backup/);
+});
+
+test("missing provider on earlier boards defaults to BVG without changing the source object", () => {
+  const { provider: _provider, ...oldBoard } = board;
+  const oldCollection = { cards: [{ id: "existing", ...oldBoard, stops: [stop] }] };
+  const before = JSON.stringify(oldCollection);
+  assert.equal(migrateSavedConfig(oldCollection).cards[0].provider, "bvg");
+  assert.equal(migrateSavedConfig({ ...oldBoard, stops: [stop] }).cards[0].provider, "bvg");
+  assert.equal(JSON.stringify(oldCollection), before);
+});
+
+test("mixed-region cards retain independent stations, modes and destination filters", () => {
+  const value = { cards: [
+    card("berlin", { stops: [{ ...stop, direction: { id: "100002", name: "Example direction" } }] }),
+    card("norway", { provider: "entur", stops: [{ id: "NSR:StopPlace:100001", name: "Example", products: ["rail"], destination: " Centre " }] }),
+    card("swiss", { provider: "transport-ch", stops: [{ ...stop, products: ["cableway"], lines: [" 10 "], destination: " Upper " }] }),
+  ] };
+  const normalized = normalizeAppConfig(value);
+  assert.deepEqual(normalized.cards.map((item) => item.provider), ["bvg", "entur", "transport-ch"]);
+  assert.equal(normalized.cards[1].stops[0].destination, "Centre");
+  assert.equal(normalized.cards[2].stops[0].destination, "Upper");
+  assert.deepEqual(normalized.cards[2].stops[0].lines, ["10"]);
+  assert.equal(normalized.cards[0].stops[0].direction.id, "100002");
+});
+
+test("unsupported regions, station ID formats and region-incompatible filters are rejected", () => {
+  for (const provider of ["unknown", "https://attacker.invalid", null, {}, "__proto__"]) {
+    assert.throws(() => normalizeAppConfig({ cards: [card("a", { provider })] }), /supported region/);
+  }
+  for (const [provider, entry] of [
+    ["bvg", { ...stop, id: "NSR:StopPlace:1" }],
+    ["transport-ch", { ...stop, id: "https://attacker.invalid" }],
+    ["entur", { ...stop, id: "100001" }],
+    ["entur", { ...stop, id: "NSR:StopPlace:1/../../" }],
+    ["entur", { ...stop, id: "NSR:Quay:1" }],
+    ["entur", { ...stop, id: "NSR:StopPlace:1", products: ["express"] }],
+    ["bvg", { ...stop, products: ["rail"] }],
+    ["transport-ch", { ...stop, direction: stop }],
+    ["bvg", { ...stop, destination: "Wrong filter" }],
+    ["transport-ch", { ...stop, destination: "x".repeat(201) }],
+  ]) assert.throws(() => normalizeAppConfig({ cards: [card("a", { provider, stops: [entry] })] }));
 });

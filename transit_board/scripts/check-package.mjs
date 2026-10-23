@@ -60,10 +60,10 @@ try {
   const response = await fetch(endpoint);
   assert.equal(response.status, 200);
   assert.deepEqual(await response.json(), { cards: [] }, 'The built server must expose the empty card collection.');
-  const collection = { cards: [{ id: 'package', type: 'custom:transit-board-card', title: 'Package check',
+  const collection = { cards: [{ id: 'package', type: 'custom:transit-board-card', provider: 'bvg', title: 'Package check',
     stops: [], max_departures: 5 }] };
   const saved = await fetch(endpoint, { method: 'PUT', headers: { 'Content-Type': 'application/json',
-    'X-Transit-Board': '1', 'If-Match': response.headers.get('ETag') }, body: JSON.stringify(collection) });
+    'X-Transit-Board': '2', 'If-Match': response.headers.get('ETag') }, body: JSON.stringify(collection) });
   assert.equal(saved.status, 200);
   assert.deepEqual(await saved.json(), collection);
   assert.deepEqual(JSON.parse(await readFile(join(packageData, 'config.json'), 'utf8')), collection);

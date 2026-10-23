@@ -1,5 +1,5 @@
-import 'transit-board-core/src/index.ts';
-import { DEFAULT_CONFIG } from 'transit-board-core/src/config.ts';
+import './components.ts';
+import { DEFAULT_CONFIG } from './card-config.ts';
 import { BoardSession } from './session.ts';
 import { MAX_CARDS } from './config.ts';
 import type { TransitCardConfig } from './config.ts';

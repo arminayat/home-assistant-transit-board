@@ -20,6 +20,7 @@ Successful saves close settings and show the updated card. If settings stay open
 
 - If another viewer saved while you were editing, your draft is retained. Choose **Reload saved board**, confirm that you want to discard the draft, then reapply your changes and save again.
 - Keep at least one transport mode for each filtered stop, use whole-number departure limits from 1 to 20, and select stations from search results.
+- Select stations after choosing Region. Unsupported providers and malformed station IDs are rejected, but a numeric ID from another source can still have a valid format and point to the wrong service. Use region search rather than copied IDs. After upgrading to beta 4, reload all open pages before saving, since older write requests are rejected.
 - The collection supports up to 20 cards, 20 stop entries across all cards and a 64 KiB configuration request. Reusing a station on two cards counts as two entries. Reduce unnecessary entries if a limit is reported.
 - If saving reports a storage error, check app logs and available storage. Do not repeatedly uninstall or delete app data to clear the message.
 
@@ -33,9 +34,9 @@ If migration reports the 64 KiB limit, the original file is preserved. Use the p
 
 ## Search or departures are unavailable
 
-Station search needs at least two characters. Try a shorter station name, select a result, and then choose **Add stop**. Search covers provider stops in Berlin and Brandenburg; it excludes addresses and landmarks.
+Choose the correct **Region** first. Station search needs at least two characters. Try a shorter station name, select a result, and then choose **Add stop**. Search covers stops supplied by that region's provider, rather than general addresses or landmarks.
 
-The device displaying the board connects directly to the public BVG REST API. Check that device's network, DNS and content blockers if requests fail. Successful app startup does not establish provider connectivity from every viewing device.
+The viewing device connects directly to `v6.bvg.transport.rest` for Berlin & Brandenburg, `api.entur.io` for Norway or `transport.opendata.ch` for Switzerland. Check that device's network, DNS and content blockers if requests fail. Entur needs the app's public client-identification header, which is included automatically; no personal key is needed. Successful app startup does not establish provider connectivity from every device.
 
 Provider outages and rate limits are retried automatically. A 429 response means the service is busy; respect the pause instead of repeatedly reloading. Failure backoff reaches five minutes, while a provider `Retry-After` value can require a longer wait.
 
@@ -43,17 +44,17 @@ Provider outages and rate limits are retried automatically. A 429 response means
 
 On a new installation, use **+ Add card** to create the first card. For an empty card, open its **Settings** gear and confirm that a stop is saved. Then clear line and direction filters and include the relevant transport modes. Verify the boarding stop, because similarly named stops may represent different locations.
 
-A direction is a station along the desired route, rather than a free-text destination label. Clear it to include both ways. Line names are matched case-insensitively against provider results. Add filters back one at a time to identify the restrictive one.
+For Berlin & Brandenburg, a direction is a station along the desired route. For Norway and Switzerland, **Destination contains** matches the displayed destination text without case sensitivity, not intermediate stops or a station ID. Clear the direction/destination filter to include both ways. Line names match provider results case-insensitively. Add filters back one at a time to identify the restrictive one.
 
-The API request covers 60 minutes and asks for at most 100 results per stop. Busy stops and locally applied line filters may return fewer rows than the configured maximum. An empty card is not proof that no service exists. Each card's departure limit applies to the stops on that card.
+BVG and Entur request up to 60 minutes and 100 results per stop. Switzerland requests up to 100 stationboard rows, without guaranteeing the same time window. Busy stops and local filters may leave fewer rows than the configured maximum. An empty card is not proof that no service exists. Each card's departure limit applies to the stops on that card.
 
 ## Data is stale, scheduled or incomplete
 
 The board refreshes every minute while visible. A hidden tab or suspended mobile app does not keep polling. Return to the page to resume updates.
 
-Failed refreshes can retain successful results for up to five minutes with a warning. Older results expire. “Scheduled” means no realtime information is available; missing platforms mean the provider did not supply one. Cancellations are marked explicitly.
+Failed refreshes can retain successful results for up to five minutes with a warning. Older results expire. “Scheduled” means no realtime information is available; missing platforms mean the provider did not supply one. Cancellations are marked when explicitly reported. The Swiss stationboard currently supplies no explicit cancellation field, so absence from the board is not interpreted as a cancellation.
 
-Clock times use Berlin local time. Countdowns also depend on your device's clock being correct. Check operator information before travelling, particularly during disruption.
+Clock times use the card's region: Berlin, Oslo or Zürich. Countdowns also depend on your device's clock being correct. Check operator information before travelling, particularly during disruption.
 
 ## Report a problem
 

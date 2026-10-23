@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.0-beta.4
+
+- Add per-card regions: Berlin & Brandenburg, Norway/Entur and Switzerland/Swiss transport API.
+- Add regional station search, transport filters, local departure clocks and destination-text filters for Norway and Switzerland, without personal API keys.
+- Preserve existing card settings and default older cards to BVG. Keep BVG direction-station filtering and shared Save/Cancel behavior.
+- Confirm region changes before clearing incompatible stops/filters; keep the original MIT snapshot unchanged with app-owned adaptations.
+
+Reload every open Web UI page before saving after updating. No manual migration or new environment variable is needed. Back up first and restore compatible app data with an older image when rolling back. Realtime information depends on the source. Browser and live Home Assistant acceptance remain unverified.
+
 ## 0.1.0-beta.3
 
 - Close settings after successful Save and show the updated card.
